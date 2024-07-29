@@ -2,7 +2,6 @@ const express = require('express')
 const route = require('./router')
 const cors=require("cors")
 const bodyParser=require("body-parser")
-
 const morgan = require('morgan')
 const app = express()
 const db=require("./config/database")
@@ -20,9 +19,10 @@ app.use(morgan('combined'))
 
 //allow access
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.URL_CLIENT,
     credentials: true
 }))
+
 route(app)
 
 app.listen(port, () => {

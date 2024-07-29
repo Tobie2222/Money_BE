@@ -10,18 +10,18 @@ const transactionsSchema=new Schema(
         type : { type: String,required: true },
         transaction_date : { type: Date,required: true },
         user: {
-            type: mongoose.Schema.Types.Number,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
             required: true
         },
         account: {
-            type: mongoose.Schema.Types.Number,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'accounts',
             required: true
         },
         category: {
-            type: mongoose.Schema.Types.Number,
-            ref: 'categorys',
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'categories',
             required: true
         },
     },

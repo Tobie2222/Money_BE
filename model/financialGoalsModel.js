@@ -8,7 +8,7 @@ const financialGoalsSchema=new Schema(
         status : { type: String,required: true },
         deadline: { type: Date,required: true },
         user: {
-            type: mongoose.Schema.Types.Number,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
             required: true
         },

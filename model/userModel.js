@@ -13,9 +13,9 @@ const UsersSchema=new Schema(
         isAdmin: { type: Boolean, default: false, required: true },
         sex: { type: String},
         avatar: { type: String,default:"https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg" },
-        google_id: { type: String },
         password_reset_token: { type: String },
         password_reset_expiration: {type: Date}
+        
     },
     {
         timestamps: true

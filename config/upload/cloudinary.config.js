@@ -15,7 +15,7 @@ const storage = new CloudinaryStorage({
     cloudinary,
     allowedFormats: ['jpg','png'],
     params:{
-        folder: 'web_ban_hang'
+        folder: 'app_ql'
     }
 })
 

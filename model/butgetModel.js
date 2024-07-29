@@ -8,12 +8,12 @@ const budgetSchema=new Schema(
         amount: { type: Number, required: true },
         period: { type: String, required: true },
         user: {
-            type: mongoose.Schema.Types.Number,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
             required: true
         },
         category: {
-            type: mongoose.Schema.Types.Number,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'categories',
             required: true
         },
