@@ -17,7 +17,12 @@ const port = 3000 || process.env.PORT
 app.use(bodyParser.json({ limit: '50mb' }))
 
 // HTTP logger
-app.use(morgan('combined'));
+app.use(morgan('combined'))
+
+
+app.get('/',(req,res)=>{
+    res.send("hello word")
+})
 
 // Allow access
 // app.use(cors(
