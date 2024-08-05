@@ -1,6 +1,5 @@
 const express=require("express")
 const Router=express.Router()
-const{verifyTokenAdmin }=require("../middleware/verifyToken")
 const uploadCloud=require("../config/upload/cloudinary.config")
 
 const accountTypeController=require("../controller/accountTypeController")

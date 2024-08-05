@@ -15,7 +15,7 @@ const verifyToken=(req,res,next)=>{
 }
 const verifyTokenUser=(req,res,next)=>{
     verifyToken(req,res,()=>{
-        if (req.user && req.user.id) {
+        if (req.user && (req.user.id===req.params.userId)) {
             next()
         } else {
             res.status(403).json({message: "you're not allow to do that!"})

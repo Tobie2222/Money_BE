@@ -4,8 +4,12 @@ const {verifyTokenUser}=require("../middleware/verifyToken")
 
 const transactionsController=require("../controller/transactionsController")
 
-// [createTransactions]
-Router.post('/createTransactions/:id_transactionsType/:id_user',verifyTokenUser,transactionsController.createTransactions)
+// [create expense Transactions]
+Router.post('/createExpenseTrans/:accountId/:userId/:categoryId',verifyTokenUser,transactionsController.createExpenseTransactions)
+
+// [create income Transactions]
+Router.post('/createIncomeTrans/:accountId/:userId/:incomeTypeId',verifyTokenUser,transactionsController.createIncomeTransactions)
+
 // [updateTransactions]
 Router.put('/updateTransactions/:transactionsId',verifyTokenUser,transactionsController.updateTransactions)
 

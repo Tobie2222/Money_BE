@@ -3,12 +3,11 @@ const {Schema}=mongoose
 
 const accountTypeSchema=new Schema(
     {
-        wallet_type_name :{type:String},
-        wallet_type_image :{type:String}
+        account_type_name :{type:String,required: true },
+        account_type_image :{type:String,required: true }
     },
     {
         timestamps: true
     }
 )
-
 module.exports=new mongoose.model('accountTypes',accountTypeSchema)

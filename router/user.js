@@ -14,5 +14,4 @@ Router.get('/getUser/:userId',verifyTokenUser,userController.getDetailUser)
 //[deleteAccount]
 Router.delete('/deleteUser/:userId',verifyTokenUser,userController.deleteUser)
 
-
 module.exports=Router

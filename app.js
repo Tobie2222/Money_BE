@@ -1,30 +1,34 @@
-const express = require('express')
-const route = require('./router')
-const cors=require("cors")
-const bodyParser=require("body-parser")
-const morgan = require('morgan')
-const app = express()
-const db=require("./config/database")
+// app.js
+const express = require('express');
+const route = require('./router');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const app = express();
+const db = require('./config/database')
 
-// //connect db
+// Connect to database
 db.connect()
+
+
 const port = 3000 || process.env.PORT
 
-//limit data
-app.use(bodyParser.json({limit:"50mb"}))
+// Limit data
+app.use(bodyParser.json({ limit: '50mb' }))
 
-//http logger
-app.use(morgan('combined'))
+// HTTP logger
+app.use(morgan('combined'));
 
-
-//allow access
-app.use(cors({
-    origin: process.env.URL_CLIENT,
-    credentials: true
-}))
+// Allow access
+// app.use(cors(
+// // {
+// //     origin: process.env.URL_CLIENT,
+// //     credentials: true
+// // }
+// ));
 
 route(app)
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
-})
+});

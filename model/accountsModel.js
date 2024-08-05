@@ -7,7 +7,6 @@ const accountsSchema=new Schema(
         desc_account: { type: String, required: true },
         balance: { type: Number, required: true },
         currency : { type: String, required: true },
-        transactions: [{ type: Schema.Types.ObjectId, ref: 'transactions' }], 
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',

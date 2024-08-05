@@ -11,4 +11,5 @@ const connect=async ()=>{
         console.log('Kết nối thất bại ')
     }
 }
+
 module.exports={connect}

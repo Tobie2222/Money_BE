@@ -1,17 +1,20 @@
 const accountTypeSchema=require("../model/accountTypeModel")
 const accountSchema=require("../model/accountsModel")
 
+
 class accountTypeController {
     async createAccountType(req,res) {
         try {
-            const {wallet_type_name}=req.body
+            const {account_type_name}=req.body
+            console.log(req.file)
             const accountType=new accountTypeSchema({
-                wallet_type_name,
-                wallet_type_image: req.file.path
+                account_type_name,
+                account_type_image: req.file.path
             })
             await accountType.save()
             return res.status(200).json({
-                message: `success`
+                message: `success`,
+                accountType
             })
         } catch(err) {
             return res.status(500).json({
@@ -46,7 +49,6 @@ class accountTypeController {
             })
         }
     }
-
 }
 
 

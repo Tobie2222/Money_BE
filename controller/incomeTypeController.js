@@ -1,14 +1,17 @@
-const userSchema=require("../model/userModel")
+const incomeTypeSchema=require("../model/incomeTypeModel")
 
-
-class userController {
-    async getDetailUser(req,res) {
+class incomeTypeController {
+    async createIncomeType(req,res) {
         try {
-            const {userId}=req.params
-            const user=await userSchema.findOne({_id:userId})
+            const {income_type_name}=req.body
+            const incomeType=new incomeTypeSchema({
+                income_type_name,
+                income_type_image: req.file.path
+            })
+            await incomeType.save()
             return res.status(200).json({
                 message: `success`,
-                user
+                incomeType
             })
         } catch(err) {
             return res.status(500).json({
@@ -16,9 +19,9 @@ class userController {
             })
         }
     }
-    async updateUser(req,res) {
+    async getAllIncomeType(req,res) {
         try {
-            
+            const allAccountType=await incomeTypeSchema.find()
             return res.status(200).json({
                 message: `success`,
                 allAccountType
@@ -29,10 +32,10 @@ class userController {
             })
         }
     }
-    async deleteUser(req,res) {
+    async deleteIncomeType(req,res) {
         try {
             const {id}=req.params
-            await accountTypeSchema.findByIdAndDelete(id)
+            await incomeTypeSchema.findByIdAndDelete(id)
             await accountSchema.updateMany({accountType: id},{$pull: {accountType:null}})
             return res.status(200).json({
                 message: `success`,
@@ -43,8 +46,7 @@ class userController {
             })
         }
     }
-
 }
 
 
-module.exports=new userController
+module.exports=new incomeTypeController

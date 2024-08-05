@@ -22,7 +22,12 @@ const transactionsSchema=new Schema(
         category: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'categories',
-            required: true
+            required: false
+        },
+        incomeType: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'incomeTypes',
+            required: false
         },
     },
     {
