@@ -11,16 +11,19 @@ Router.post('/createExpenseTrans/:accountId/:userId/:categoryId',verifyTokenUser
 Router.post('/createIncomeTrans/:accountId/:userId/:incomeTypeId',verifyTokenUser,transactionsController.createIncomeTransactions)
 
 // [updateTransactions]
-Router.put('/updateTransactions/:transactionsId',verifyTokenUser,transactionsController.updateTransactions)
+Router.put('/updateTransactions/:tranId',verifyTokenUser,transactionsController.updateTransactions)
 
 //[getDetailTransactions]
-Router.get('/getDetailTransactions/:transactionsId',verifyTokenUser,transactionsController.getDetailTransactions)
+Router.get('/getDetailTransactions/:tranId',verifyTokenUser,transactionsController.getDetailTransactions)
 
-//[getAllTransactions]
+//[get All Transactions]
+Router.get('/getAllTransactions/:userId',verifyTokenUser,transactionsController.getAllTransactionsByUser)
+
+//[get All recent Transactions]
 Router.get('/getAllTransactions/:userId',verifyTokenUser,transactionsController.getAllTransactionsByUser)
 
 //[deleteTransactions]
-Router.delete('/deleteTransactions/:transactionsId',verifyTokenUser,transactionsController.deleteTransactions)
+Router.delete('/deleteTransactions/:tranId',verifyTokenUser,transactionsController.deleteTransactions)
 
 
 module.exports=Router

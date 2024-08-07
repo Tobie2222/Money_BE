@@ -1,5 +1,10 @@
 const userSchema=require("../model/userModel")
-
+const accountSchema=require("../model/accountsModel")
+const transactionsSchema=require("../model/transactionsModel")
+const categoriesSchema=require("../model/categoriesModel")
+const savingSchema=require("../model/savingModel")
+const financialGoalsSchema=require("../model/financialGoalsModel")
+const budgetSchema=require("../model/butgetModel")
 
 class userController {
     async getDetailUser(req,res) {
@@ -18,10 +23,10 @@ class userController {
     }
     async updateUser(req,res) {
         try {
-            
+            const {userId}=req.params
+            await userSchema.findByIdAndUpdate(userId,{image: req.file.path,...req.body})
             return res.status(200).json({
-                message: `success`,
-                allAccountType
+                message: `success`
             })
         } catch(err) {
             return res.status(500).json({
@@ -31,11 +36,17 @@ class userController {
     }
     async deleteUser(req,res) {
         try {
-            const {id}=req.params
-            await accountTypeSchema.findByIdAndDelete(id)
-            await accountSchema.updateMany({accountType: id},{$pull: {accountType:null}})
+            const {userId}=req.params
+            await Promise.all([
+                savingSchema.deleteMany({ user: userId }),
+                accountSchema.deleteMany({ user: userId }),
+                transactionsSchema.deleteMany({ user: userId }),
+                categoriesSchema.deleteMany({ user: userId }),
+                financialGoalsSchema.deleteMany({ user: userId }),
+                budgetSchema.deleteMany({ user: userId })
+            ])
             return res.status(200).json({
-                message: `success`,
+                message: `success`
             })
         } catch(err) {
             return res.status(500).json({

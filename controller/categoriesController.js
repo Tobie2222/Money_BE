@@ -1,5 +1,4 @@
 const categoriesSchema=require("../model/categoriesModel")
-const UsersSchema=require("../model/userModel")
 
 
 class categoriesController {

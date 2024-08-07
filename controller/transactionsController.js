@@ -68,10 +68,26 @@ class transactionsController {
     async getAllTransactionsByUser(req,res) {
         try {
             const {userId}=req.params
-            const allAccountByUser=await accountSchema.find({user: userId})
+            const allTranByUser=await accountSchema.find({user: userId})
             return res.status(200).json({
                 message:"success",
-                allAccountByUser
+                allTranByUser
+            })
+        } catch(err) {
+            return res.status(500).json({
+                message: `Lỗi ${err}`
+            })
+        }
+    }
+    async getRecentTransactionsByUser(req,res) {
+        try {
+            const {userId}=req.params
+            const allRecentTranByUser=await accountSchema.find({user: userId})
+                .sort({ transaction_date: -1 })
+                .limit(10)
+            return res.status(200).json({
+                message:"success",
+                allRecentTranByUser
             })
         } catch(err) {
             return res.status(500).json({
@@ -81,8 +97,12 @@ class transactionsController {
     }
     async getDetailTransactions(req,res) {
         try {
-            const {accountId}=req.params
-            
+            const {tranId}=req.params
+            const findTran=await transactionsSchema.findById(tranId)
+            return res.status(200).json({
+                message:"success",
+                findTran
+            })
         } catch(err) {
             return res.status(500).json({
                 message: `Lỗi ${err}`
@@ -91,7 +111,12 @@ class transactionsController {
     }
     async updateTransactions(req,res) {
         try {
-
+            const {tranId}=req.params
+            const findTran=await transactionsSchema.findByIdAndUpdate(tranId,req.body,{ new: true })
+            return res.status(200).json({
+                message:"success",
+                findTran
+            })
         } catch(err) {
             return res.status(500).json({
                 message: `Lỗi ${err}`
@@ -100,14 +125,17 @@ class transactionsController {
     }
     async deleteTransactions(req,res) {
         try {
-
+            const {tranId}=req.params
+            await transactionsSchema.findByIdDelete(tranId)
+            return res.status(200).json({
+                message:"success"
+            })
         } catch(err) {
             return res.status(500).json({
                 message: `Lỗi ${err}`
             })
         }
     }
-
 }
 
 

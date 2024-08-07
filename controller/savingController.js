@@ -1,4 +1,4 @@
-const accountSchema=require("../model/accountsModel")
+const SavingSchema=require("../model/savingModel")
 const transactionsSchema=require("../model/transactionsModel")
 
 class savingController {
@@ -6,7 +6,7 @@ class savingController {
         try {
             const {id_accountType,id_user}=req.params
             const {account_name,desc_account,balance,currency}=req.body
-            const newAccount =new accountSchema({
+            const newAccount =new SavingSchema({
                 account_name,
                 desc_account,
                 balance,
@@ -27,7 +27,7 @@ class savingController {
     async getAllSavingByUser(req, res) {
         try {
             const { userId } = req.params
-            const allAccountByUser = await accountSchema.find({ user: userId })
+            const allAccountByUser = await SavingSchema.find({ user: userId })
             return res.status(200).json({
                 message: "Success",
                 allAccountByUser
@@ -41,7 +41,7 @@ class savingController {
     async  getSavingDetails(req, res) {
         try {
             const { accountId } = req.params
-            const account = await accountSchema.findById(accountId)
+            const account = await SavingSchema.findById(accountId)
                 .populate({
                     path: 'transactions', 
                     select: 'transaction_name amount type transaction_date' 
@@ -59,7 +59,7 @@ class savingController {
     async updateSaving(req,res) {
         try {
             const {accountId}=req.params
-            await accountSchema.findByIdAndUpdate(accountId,req.body)
+            await SavingSchema.findByIdAndUpdate(accountId,req.body)
             return res.status(200).json({
                 message: "success",
             })
@@ -72,7 +72,7 @@ class savingController {
     async deleteSaving(req,res) {
         try {
             const {accountId,transactionId}=req.params
-            await accountSchema.findByIdAndDelete(accountId)
+            await SavingSchema.findByIdAndDelete(accountId)
             await transactionsSchema.updateMany({_id:transactionId},{$pull: {account:null}})
             return res.status(200).json({
                 message: "success",
