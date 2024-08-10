@@ -3,7 +3,6 @@ const accountSchema=require("../model/accountsModel")
 const transactionsSchema=require("../model/transactionsModel")
 const categoriesSchema=require("../model/categoriesModel")
 const savingSchema=require("../model/savingModel")
-const financialGoalsSchema=require("../model/financialGoalsModel")
 const budgetSchema=require("../model/butgetModel")
 
 class userController {
