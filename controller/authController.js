@@ -79,8 +79,10 @@ class authController {
             const findEmail = await UsersSchema.findOne({ email })
             if (!findEmail) return res.status(403).json({ message: "Tài khoản không tồn tại!" })
             const verificationCode = Math.floor(1000+Math.random()*9000)
+            const expirationTime = 10 * 60 * 1000 
+            const expirationDate = new Date(Date.now() + expirationTime)
             console.log(verificationCode)
-            await UsersSchema.updateOne({ email }, { password_reset_token: verificationCode, password_reset_expiration: Date.now() + 36000 }) // 1 min
+            await UsersSchema.updateOne({ email }, { password_reset_token: verificationCode, password_reset_expiration: expirationDate}) // 10 min
             await transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: email,
@@ -88,7 +90,7 @@ class authController {
                 text: `Mã xác thực của bạn là ${verificationCode}`,
                 html: `<p>Mã xác thực của bạn là <strong>${verificationCode}</strong></p>`,
             })
-            res.status(200).json({ message: "Mã xác thực đã được gửi đến email của bạn." })
+            res.status(200).json({ message: "Mã xác thực đã được gửi đến email của bạn." ,expirationDate ,email})
         } catch (err) {
             console.error("Error sending email:", err)
             res.status(500).json({ message: `Không thể gửi email: ${err.message}` })
@@ -134,6 +136,11 @@ class authController {
                 })
             }
             const findUser=await UsersSchema.findOne({email})
+            if (!findUser) {
+                return res.status(403).json({
+                    message: "Người dùng không tồn tại"
+                })
+            }
             const salt=await bcrypt.genSalt(10)
             const hashPassword=await bcrypt.hash(newPassword,salt)
             await findUser.updateOne({
