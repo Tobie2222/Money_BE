@@ -58,12 +58,19 @@ class authController {
             const validatePassword=await bcrypt.compare(password,findUser.password)
             if (!validatePassword) return res.status(404).json({message: "mật khẩu không chính xác! "})
             const authControllers=new authController
+            console.log(findUser)
+
             if (findUser && validatePassword) {
                 const token=await authControllers.generateToken(findUser)
+                const user={
+                    name: findUser.name,
+                    avatar: findUser.avatar,
+                    email: findUser.email
+                }
                 return res.status(200).json({
                     message: "Đăng nhập thành công",
                     token,
-                    id: findUser._id
+                    user
                 })
             }
         } catch(err) {
