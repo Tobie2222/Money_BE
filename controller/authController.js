@@ -65,7 +65,8 @@ class authController {
                 const user={
                     name: findUser.name,
                     avatar: findUser.avatar,
-                    email: findUser.email
+                    email: findUser.email,
+                    id: findUser.id
                 }
                 return res.status(200).json({
                     message: "Đăng nhập thành công",

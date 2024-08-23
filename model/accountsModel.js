@@ -14,7 +14,7 @@ const accountsSchema=new Schema(
         },
         accountType: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'wallets',
+            ref: 'accountTypes',
             required: true
         },
     },
