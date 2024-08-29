@@ -33,11 +33,17 @@ class accountController {
     async getAllAccountByUser(req, res) {
         try {
             const { userId } = req.params
-            const allAccountByUser = await accountSchema.find({ user: userId })
+            const allAccountByUser = await accountSchema         
+            .find({ user: userId })
+            .populate('accountType')
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec()
+
             return res.status(200).json({
                 message: "Success",
                 allAccountByUser
-            });
+            })
         } catch (err) {
             return res.status(500).json({
                 message: `Error: ${err.message}`
