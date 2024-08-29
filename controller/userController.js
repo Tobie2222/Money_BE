@@ -4,6 +4,9 @@ const transactionsSchema=require("../model/transactionsModel")
 const categoriesSchema=require("../model/categoriesModel")
 const savingSchema=require("../model/savingModel")
 const budgetSchema=require("../model/butgetModel")
+const bcrypt=require("bcrypt")
+const paginate=require("../utils/paginate")
+const { populate } = require("dotenv")
 
 class userController {
     async getDetailUser(req,res) {
@@ -20,12 +23,52 @@ class userController {
             })
         }
     }
+    async createUser(req,res) {
+        try {
+            const {name,email,sex,avatar,password}=req.body
+            const salt=await bcrypt.genSalt(10)
+            const hashPassword=await bcrypt.hash(password,salt)
+            const newUser=new userSchema({
+                name,email,sex,
+                avatar: req.file?req.file.path:"",
+                password: hashPassword
+            })
+            await newUser.save()
+            return res.status(200).json({
+                message: "Tạo người dùng mới thành công",
+            })
+        } catch(err) {
+            return res.status(500).json({
+                message: `Lỗi ${err}`
+            })
+        }
+    }
+    async getAllUser(req,res) {
+        try {
+            const {page,limit}=req.query
+            const options={
+                page,
+                limit,
+                populate: "",
+                sort:  {createdAt: -1 }
+            }
+            const getAllUser=await paginate(userSchema,{},options)
+            return res.status(200).json({
+                message: "success",
+                getAllUser
+            })
+        } catch(err) {
+            return res.status(500).json({
+                message: `Lỗi ${err}`
+            })
+        }
+    }
     async updateUser(req,res) {
         try {
             const {userId}=req.params
-            await userSchema.findByIdAndUpdate(userId,{image: req.file.path,...req.body})
+            await userSchema.findByIdAndUpdate(userId,{image: req.file?req.file?.path:"",...req.body})
             return res.status(200).json({
-                message: `success`
+                message: "Cập nhật người dùng thành công"
             })
         } catch(err) {
             return res.status(500).json({
@@ -45,7 +88,7 @@ class userController {
                 budgetSchema.deleteMany({ user: userId })
             ])
             return res.status(200).json({
-                message: `success`
+                message: "success"
             })
         } catch(err) {
             return res.status(500).json({

@@ -1,17 +1,23 @@
 const express=require("express")
 const Router=express.Router()
-const{verifyTokenUser }=require("../middleware/verifyToken")
+const{verifyTokenUser,verifyTokenAdmin }=require("../middleware/verifyToken")
 const uploadCloud=require("../config/upload/cloudinary.config")
 
 const userController=require("../controller/userController")
 
-// [createAccount]
+// [createUser]
 Router.put('/updateUser/:userId',uploadCloud.single("image"),verifyTokenUser,userController.updateUser)
 
-//[getAllAccount]
-Router.get('/getUser/:userId',verifyTokenUser,userController.getDetailUser)
+//[getUser]
+Router.get('/getUser/:userId',userController.getDetailUser)
 
-//[deleteAccount]
-Router.delete('/deleteUser/:userId',verifyTokenUser,userController.deleteUser)
+//[createUser]
+Router.post('/createUser',uploadCloud.single("image"),verifyTokenAdmin,userController.createUser)
+
+//[deleteUser]
+Router.delete('/deleteUser/:userId',verifyTokenAdmin,userController.deleteUser)
+
+//[get All User]
+Router.get('/getAllUser',verifyTokenAdmin,userController.getAllUser)
 
 module.exports=Router

@@ -16,11 +16,12 @@ Router.put('/updateTransactions/:tranId',verifyTokenUser,transactionsController.
 //[getDetailTransactions]
 Router.get('/getDetailTransactions/:tranId',verifyTokenUser,transactionsController.getDetailTransactions)
 
-//[get All Transactions]
-Router.get('/getAllTransactions/:userId',verifyTokenUser,transactionsController.getAllTransactionsByUser)
-
 //[get All recent Transactions]
-Router.get('/getAllTransactions/:userId',verifyTokenUser,transactionsController.getAllTransactionsByUser)
+Router.get('/getAllTransactions/:userId',verifyTokenUser,transactionsController.getRecentTransactionsByUser)
+
+// //[get All avg Transactions by month]
+// Router.get('/getAvgByMonth/:year',verifyTokenUser,transactionsController.getMonthlyAverage)
+
 
 //[deleteTransactions]
 Router.delete('/deleteTransactions/:tranId',verifyTokenUser,transactionsController.deleteTransactions)

@@ -21,13 +21,11 @@ const transactionsSchema=new Schema(
         },
         category: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'categories',
-            required: false
+            ref: 'categories'
         },
         incomeType: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'incomeTypes',
-            required: false
+            ref: 'incomeTypes'
         },
     },
     {
