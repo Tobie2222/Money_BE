@@ -161,6 +161,35 @@ class authController {
             })
         }
     }
+    async changePassword(req, res) {
+        try {
+            const {email,oldPassword,newPassword,confirmNewPassword}=req.body
+            if (newPassword!==confirmNewPassword) {
+                return res.status(403).json({
+                    message: "xác nhận mật khẩu không đúng"
+                })
+            }
+            const findUser=await UsersSchema.findOne({email})
+            if (!findUser) {
+                return res.status(403).json({
+                    message: "Người dùng không tồn tại"
+                })
+            }
+            const validatePassword=await bcrypt.compare(oldPassword,findUser.password)
+            if (!validatePassword) return res.status(404).json({message: "mật khẩu không chính xác! "})
+
+            const salt=await bcrypt.genSalt(10)
+            const hashPassword=await bcrypt.hash(newPassword,salt)
+            await findUser.updateOne({
+                password: hashPassword
+            })
+            return res.status(200).json({ message: "đổi mật khẩu thành công!" })
+        } catch(err) {
+            return res.status(500).json({
+                message: err
+            })
+        }
+    }
 }
 
 

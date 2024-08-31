@@ -1,6 +1,6 @@
 const express=require("express")
 const Router=express.Router()
-const{verifyTokenUser,verifyTokenAdmin }=require("../middleware/verifyToken")
+const {verifyTokenUser,verifyTokenAdmin }=require("../middleware/verifyToken")
 const uploadCloud=require("../config/upload/cloudinary.config")
 
 const userController=require("../controller/userController")
@@ -9,7 +9,7 @@ const userController=require("../controller/userController")
 Router.put('/updateUser/:userId',uploadCloud.single("image"),verifyTokenUser,userController.updateUser)
 
 //[getUser]
-Router.get('/getUser/:userId',userController.getDetailUser)
+Router.get('/getUser/:userId',verifyTokenUser,userController.getDetailUser)
 
 //[createUser]
 Router.post('/createUser',uploadCloud.single("image"),verifyTokenAdmin,userController.createUser)

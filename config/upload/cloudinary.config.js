@@ -13,7 +13,7 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
     cloudinary,
-    allowedFormats: ['jpg','png'],
+    allowedFormats: ['jpg','png','jpeg'],
     params:{
         folder: 'app_ql'
     }

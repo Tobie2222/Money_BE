@@ -25,7 +25,7 @@ class userController {
     }
     async createUser(req,res) {
         try {
-            const {name,email,sex,avatar,password}=req.body
+            const {name,email,sex,password}=req.body
             const salt=await bcrypt.genSalt(10)
             const hashPassword=await bcrypt.hash(password,salt)
             const newUser=new userSchema({
@@ -66,7 +66,8 @@ class userController {
     async updateUser(req,res) {
         try {
             const {userId}=req.params
-            await userSchema.findByIdAndUpdate(userId,{image: req.file?req.file?.path:"",...req.body})
+            console.log(req.file)
+            await userSchema.findByIdAndUpdate(userId,{avatar: req.file?req.file?.path:"",...req.body})
             return res.status(200).json({
                 message: "Cập nhật người dùng thành công"
             })

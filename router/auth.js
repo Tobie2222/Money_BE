@@ -18,5 +18,8 @@ Router.post('/verify-code',authController.verifyCode)
 //reset password
 Router.post('/reset-password',authController.resetPassword)
 
+//change password
+Router.post('/changePassword',authController.changePassword)
+
 
 module.exports=Router
