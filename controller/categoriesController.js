@@ -1,4 +1,5 @@
 const categoriesSchema=require("../model/categoriesModel")
+const transactionsSchema=require("../model/transactionsModel")
 
 
 class categoriesController {
@@ -8,7 +9,7 @@ class categoriesController {
             const {categories_name}=req.body
             const findCat=await categoriesSchema.findOne({categories_name})
             if (findCat) return res.status(403).json({
-                message: "Category name already exists"
+                message: "Danh mục chi tiêu đã tồn tại"
             })
             if (!req.file) return res.status(403).json({
                 message: "image not "
@@ -35,10 +36,12 @@ class categoriesController {
         try {
             const {userId}=req.params
             const {categories_name}=req.body
-            const findCat=await categoriesSchema.findOne({categories_name})
-            if (findCat) return res.status(403).json({
-                message: "Category name already exists"
-            })
+            const findCat = await categoriesSchema.findOne({ categories_name })
+            if (findCat) {
+                return res.status(403).json({
+                    message: "Danh mục chi tiêu đã tồn tại!"
+                })
+            }
             if (!req.file) return res.status(403).json({
                 message: "image not "
             })
@@ -50,7 +53,7 @@ class categoriesController {
             })
             await newCat.save()
             return res.status(200).json({
-                message: `success d`,
+                message: `Tạo mới danh mục chi tiêu thành công`,
                 newCat
             })
         } catch(err) {
@@ -98,20 +101,33 @@ class categoriesController {
         }
     }
     //[delete cat]
-    async deleteCategories(req,res) {
+    async deleteCategories(req, res) {
         try {
-            const {id}=req.params
-            await categoriesSchema.findByIdAndDelete(id)
-            await accountSchema.updateMany({Categories: id},{$pull: {Categories:null}})
+            const { catId, userId } = req.params
+            const category = await categoriesSchema.findById(catId)
+            if (!category) {
+                return res.status(404).json({
+                    message: "Danh mục không tồn tại"
+                })
+            }
+            if (category.is_global || category.user.toString() !== userId) {
+                return res.status(403).json({
+                    message: "Danh mục không thể bị xóa"
+                })
+            }
+            await categoriesSchema.findByIdAndDelete(catId)
+            await transactionsSchema.updateMany({ category: catId }, { $set: {category:null}})
+            
             return res.status(200).json({
-                message: `success`,
+                message: "Xóa danh mục chi tiêu thành công",
             })
-        } catch(err) {
+        } catch (err) {
             return res.status(500).json({
                 message: `Lỗi ${err}`
             })
         }
     }
+    
 }
 
 

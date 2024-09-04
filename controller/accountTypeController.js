@@ -6,7 +6,6 @@ class accountTypeController {
     async createAccountType(req,res) {
         try {
             const {account_type_name}=req.body
-            console.log(req.file)
             const accountType=new accountTypeSchema({
                 account_type_name,
                 account_type_image: req.file.path
@@ -39,9 +38,9 @@ class accountTypeController {
         try {
             const {id}=req.params
             await accountTypeSchema.findByIdAndDelete(id)
-            await accountSchema.updateMany({accountType: id},{$pull: {accountType:null}})
+            await accountSchema.updateMany({ accountType: id }, { $set: { accountType: null } })
             return res.status(200).json({
-                message: `success`,
+                message: `xóa thành công`,
             })
         } catch(err) {
             return res.status(500).json({

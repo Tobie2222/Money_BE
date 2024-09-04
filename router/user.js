@@ -20,4 +20,7 @@ Router.delete('/deleteUser/:userId',verifyTokenAdmin,userController.deleteUser)
 //[get All User]
 Router.get('/getAllUser',verifyTokenAdmin,userController.getAllUser)
 
+//[find All User]
+Router.get('/findUser',verifyTokenAdmin,userController.findUser)
+
 module.exports=Router

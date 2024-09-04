@@ -2,11 +2,10 @@ const userSchema=require("../model/userModel")
 const accountSchema=require("../model/accountsModel")
 const transactionsSchema=require("../model/transactionsModel")
 const categoriesSchema=require("../model/categoriesModel")
+const incomeTypeSchema=require("../model/incomeTypeModel")
 const savingSchema=require("../model/savingModel")
-const budgetSchema=require("../model/butgetModel")
 const bcrypt=require("bcrypt")
 const paginate=require("../utils/paginate")
-const { populate } = require("dotenv")
 
 class userController {
     async getDetailUser(req,res) {
@@ -67,9 +66,16 @@ class userController {
         try {
             const {userId}=req.params
             console.log(req.file)
-            await userSchema.findByIdAndUpdate(userId,{avatar: req.file?req.file?.path:"",...req.body})
+            const newUser=await userSchema.findByIdAndUpdate(userId,{avatar: req.file?req.file?.path:"",...req.body})
+            const updateUser={
+                email:newUser.email,
+                name:newUser.name,
+                avatar:newUser.avatar,
+                sex: newUser.sex
+            }
             return res.status(200).json({
-                message: "Cập nhật người dùng thành công"
+                message: "Cập nhật người dùng thành công",
+                updateUser
             })
         } catch(err) {
             return res.status(500).json({
@@ -77,27 +83,50 @@ class userController {
             })
         }
     }
-    async deleteUser(req,res) {
+    async findUser(req,res) {
         try {
-            const {userId}=req.params
+            const {keyword}=req.query
+            const searchQuery={
+                $or :[
+                    { name: { $regex: keyword, $options: 'i' } },
+                    { email: { $regex: keyword, $options: 'i' } }  
+                ]
+            }
+            const user=await userSchema.find(searchQuery)
+            return res.status(200).json({
+                message: "success",
+                user
+            })
+        } catch(err) {
+            return res.status(500).json({
+                message: `Lỗi ${err}`
+            })
+        }
+    }
+    async deleteUser(req, res) {
+        try {
+            const { userId } = req.params
+            const user = await userSchema.findById(userId)
+            if (!user) {
+                return res.status(404).json({ message: "Người dùng không tồn tại" })
+            }
             await Promise.all([
                 savingSchema.deleteMany({ user: userId }),
                 accountSchema.deleteMany({ user: userId }),
                 transactionsSchema.deleteMany({ user: userId }),
                 categoriesSchema.deleteMany({ user: userId }),
-                financialGoalsSchema.deleteMany({ user: userId }),
-                budgetSchema.deleteMany({ user: userId })
+                incomeTypeSchema.deleteMany({ user: userId }),
             ])
+            await userSchema.findByIdAndDelete(userId)
             return res.status(200).json({
-                message: "success"
-            })
-        } catch(err) {
+                message: "Xóa người dùng thành công"
+            });
+        } catch (err) {
             return res.status(500).json({
-                message: `Lỗi ${err}`
+                message: `Lỗi: ${err.message || err}`
             })
         }
     }
-
 }
 
 

@@ -31,7 +31,7 @@ app.get('/',(req,res)=>{
 // //     credentials: true
 // // }
 // ));
-
+app.use(cors())
 route(app)
 
 app.listen(port, () => {

@@ -7,7 +7,7 @@ const accountController=require("../controller/accountController")
 // [createAccount]
 Router.post('/createAccount/:id_accountType/:userId',verifyTokenUser,accountController.createAccount)
 // [updateAccount]
-Router.put('/updateAccount/:accountId',verifyTokenUser,accountController.updateAccount)
+Router.put('/updateAccount/:accountId/:userId',verifyTokenUser,accountController.updateAccount)
 
 //[getDetailAccount]
 Router.get('/getDetailAccount/:accountId/:userId',verifyTokenUser,accountController.getAccountDetails)
@@ -20,7 +20,7 @@ Router.get('/getBalance/:userId',verifyTokenUser,accountController.getTotalBalan
 
 
 //[deleteAccount]
-Router.delete('/deleteAccount/:accountId',verifyTokenUser,accountController.deleteAccount)
+Router.delete('/deleteAccount/:accountId/:userId',verifyTokenUser,accountController.deleteAccount)
 
 
 module.exports=Router
