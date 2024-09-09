@@ -12,6 +12,7 @@ const UsersSchema=new Schema(
         password: { type: String, required: true },
         isAdmin: { type: Boolean, default: false, required: true },
         sex: { type: String},
+        slug_user: {type: String, required: true },
         avatar: { type: String,default:"https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg" },
         password_reset_token: { type: String },
         password_reset_expiration: {type: Date}

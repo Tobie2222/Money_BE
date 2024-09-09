@@ -5,6 +5,7 @@ const transactionsSchema=new Schema(
     {
         transaction_name: { type: String,required: true },
         desc_transaction: { type: String,required: true },
+        slug_user: { type: String,required: true },
         is_fixed: { type: Boolean,required: true },
         amount : { type: Number,required: true },
         type : { type: String,required: true },

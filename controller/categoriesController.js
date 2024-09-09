@@ -85,14 +85,16 @@ class categoriesController {
     //[update cat]
     async updateCategories(req,res) {
         try {
-            const {wallet_type_name}=req.body
-            const Categories=new categoriesSchema({
-                wallet_type_name,
-                wallet_type_image: req.file.path
-            })
-            await Categories.save()
+            const {catId}=req.params
+            const findCat = await categoriesSchema.findById(catId)
+            if (findCat.is_global) {
+                return res.status(403).json({
+                    message: `Không thể cập nhật danh mục mặc định`
+                })
+            }
+            await categoriesSchema.findByIdAndUpdate(catId, { ...req.body })
             return res.status(200).json({
-                message: `success`
+                message: `cập nhật danh mục chi tiêu thành công`
             })
         } catch(err) {
             return res.status(500).json({

@@ -1,6 +1,8 @@
 const SavingSchema=require("../model/savingModel")
 const accountSchema=require("../model/accountsModel")
 const savingsTransactionsSchema=require("../model/savingTransactionModel")
+const notificationSchema=require("../model/notificationModel")
+const userNotificationSchema=require("../model/userNotificationModel")
 
 class savingController {
     //[create saving]
@@ -128,16 +130,33 @@ class savingController {
             const currentAmount = Number(findSaving.current_amount);
             const goalAmount = Number(findSaving.goal_amount);
             
-            if (currentAmount >= goalAmount) {
+            if (currentAmount > goalAmount) {
                 return res.status(403).json({
                     message: "Bạn không thể gửi tiền nữa!",
                 })
             }
+
             console.log(findSaving)
             findSaving.current_amount+=amount
             findAccount.balance-=amount
             await findSaving.save()
             await findAccount.save()
+            if (findSaving.current_amount == findSaving.goal_amount) {
+                const newNotification = new notificationSchema({
+                    user: userId,
+                    notification_name: 'Mục tiêu tiết kiệm đã hoàn thành!',
+                    desc_notification: `Bạn đã đạt được mục tiêu tiết kiệm ${findSaving.saving_name}. Xin chúc mừng!`,
+                    type: 'client',
+                    priority: 'low',
+                    status: 'unread',
+                })
+                await newNotification.save()
+                const newUserNotificationSchema=new userNotificationSchema({
+                    user: userId,
+                    notification: newNotification._id
+                })
+                await newUserNotificationSchema.save()
+            }
             const newSavingTran=new savingsTransactionsSchema({
                 name_tran,
                 transaction_date,

@@ -16,4 +16,7 @@ Router.delete('/deleteIncomeType/:incomeTypeId/:userId',verifyTokenUser,incomeTy
 //[getAllIncomeType]
 Router.get('/getAllIncomeType/:userId',verifyTokenUser,incomeTypeController.getAllIncomeType)
 
+//[update]
+Router.put('/updateIncomeType/:incomeTypeId/:userId',verifyTokenUser,incomeTypeController.updateIncomeType)
+
 module.exports=Router

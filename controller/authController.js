@@ -3,6 +3,7 @@ const jwt=require("jsonwebtoken")
 const dotenv=require("dotenv")
 const UsersSchema=require("../model/userModel")
 const nodemailer = require("nodemailer")
+const slug = require('slug')
 dotenv.config()
 
 
@@ -37,7 +38,8 @@ class authController {
                 name,
                 email,
                 password: hashPassword,
-                sex
+                sex,
+                slug_user: slug(name, { lower: true })
             })
             await user.save()
             return res.status(200).json({
@@ -66,7 +68,8 @@ class authController {
                     name: findUser.name,
                     avatar: findUser.avatar,
                     email: findUser.email,
-                    id: findUser.id
+                    id: findUser.id,
+                    slug_user: findUser.slug_user
                 }
                 return res.status(200).json({
                     message: "Đăng nhập thành công",

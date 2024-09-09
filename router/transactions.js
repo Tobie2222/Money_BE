@@ -30,14 +30,14 @@ Router.get('/getDetailTran/:tranId/:userId',verifyTokenUser,transactionsControll
 Router.get('/getAllTranRecent/:userId',verifyTokenUser,transactionsController.getRecentTranByUser)
 
 //[get avg Transactions]
-Router.get('/getSumTranInMonth/:userId',verifyTokenUser,transactionsController.getAvgTranInMonth)
+Router.get('/getAvgTranInMonth/:userId/:slug_user',verifyTokenUser,transactionsController.getAvgTranInMonth)
 
 
 //[spread All sum transactions by month by year]
-Router.get('/getSumTranByMonth/:userId',verifyTokenUser,transactionsController.getMonthlySumTran)
+Router.get('/getSumTranByMonth/:userId/:slug_user',verifyTokenUser,transactionsController.getMonthlySumTran)
 
 //[spread All sum avg by month by year]
-Router.get('/getAvgTranByMonth/:userId',verifyTokenUser,transactionsController.getAverageIncomeAndExpensePerMonth)
+Router.get('/getAvgTranByMonth/:userId/:slug_user',verifyTokenUser,transactionsController.getAverageIncomeAndExpensePerMonth)
 
 
 

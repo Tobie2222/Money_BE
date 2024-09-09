@@ -6,6 +6,7 @@ const incomeTypeSchema=require("../model/incomeTypeModel")
 const savingSchema=require("../model/savingModel")
 const bcrypt=require("bcrypt")
 const paginate=require("../utils/paginate")
+const slug = require('slug')
 
 class userController {
     async getDetailUser(req,res) {
@@ -25,12 +26,14 @@ class userController {
     async createUser(req,res) {
         try {
             const {name,email,sex,password}=req.body
+            const userSlug = slug(name, { lower: true })
             const salt=await bcrypt.genSalt(10)
             const hashPassword=await bcrypt.hash(password,salt)
             const newUser=new userSchema({
                 name,email,sex,
                 avatar: req.file?req.file.path:"",
-                password: hashPassword
+                password: hashPassword,
+                slug_user:userSlug
             })
             await newUser.save()
             return res.status(200).json({
@@ -65,7 +68,6 @@ class userController {
     async updateUser(req,res) {
         try {
             const {userId}=req.params
-            console.log(req.file)
             const newUser=await userSchema.findByIdAndUpdate(userId,{avatar: req.file?req.file?.path:"",...req.body})
             const updateUser={
                 email:newUser.email,
@@ -107,6 +109,9 @@ class userController {
         try {
             const { userId } = req.params
             const user = await userSchema.findById(userId)
+            if (user.isAdmin) {
+                return res.status(404).json({ message: "Không thể xóa admin" })
+            }
             if (!user) {
                 return res.status(404).json({ message: "Người dùng không tồn tại" })
             }

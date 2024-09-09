@@ -59,9 +59,28 @@ class incomeTypeController {
             })
         }
     }
-    async getAllIncomeType(req,res) {
+    async updateIncomeType(req,res) {
         try {
-            const {userId}=req.params
+            const {incomeTypeId}=req.params
+            const findIncomeType = await incomeTypeSchema.findById(incomeTypeId)
+            if (findIncomeType.is_global) {
+                return res.status(403).json({
+                    message: `Không thể cập nhật danh mục mặc định`
+                })
+            }
+            await incomeTypeSchema.findByIdAndUpdate(incomeTypeId, { ...req.body })
+            return res.status(200).json({
+                message: `cập nhật danh mục thu nhập thành công`
+            })
+        } catch(err) {
+            return res.status(500).json({
+                message: `Lỗi ${err}`
+            })
+        }
+    }
+    async getAllIncomeType (req,res) {
+        try {
+            const {incomeTypeId,userId}=req.params
             const allInComeType=await incomeTypeSchema.find({
                 $or : [
                     {user:userId},

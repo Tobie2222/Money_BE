@@ -1,6 +1,8 @@
 const transactionsSchema = require("../model/transactionsModel")
 const accountSchema = require("../model/accountsModel")
+
 const userSchema = require("../model/userModel")
+const mongoose = require('mongoose')
 
 class transactionsController {
     //[create tran expense]
@@ -8,6 +10,7 @@ class transactionsController {
         try {
             const { accountId, userId, categoryId } = req.params
             const findAccount = await accountSchema.findById(accountId)
+            const findUser=await userSchema.findById(userId)
             const { transaction_name, desc_transaction, amount, transaction_date } = req.body
             findAccount.balance -= amount
             if (findAccount.balance<amount) {
@@ -26,7 +29,8 @@ class transactionsController {
                 user: userId,
                 account: accountId,
                 category: categoryId,
-                incomeType: null
+                incomeType: null,
+                slug_user: findUser.slug_user 
             })
             await accountSchema.updateOne({_id:accountId},{$push:{transactions: newExpenseTrans._id}})
             await newExpenseTrans.save()
@@ -44,6 +48,7 @@ class transactionsController {
     async createIncomeTransactions(req, res) {
         try {
             const { accountId, incomeTypeId, userId } = req.params
+            const findUser=await userSchema.findById(userId)
             const { transaction_name, desc_transaction, amount, transaction_date } = req.body
             const findAccount = await accountSchema.findById(accountId)
             findAccount.balance += amount
@@ -58,7 +63,8 @@ class transactionsController {
                 user: userId,
                 account: accountId,
                 incomeType: incomeTypeId,
-                category: null
+                category: null,
+                slug_user: findUser.slug_user 
             })
             await accountSchema.updateOne({_id:accountId},{$push:{transactions: newTranIncome._id}})
             await newTranIncome.save()
@@ -186,7 +192,7 @@ class transactionsController {
             const { tranId } = req.params
             const findTran = await transactionsSchema.findByIdAndUpdate(tranId, req.body, { new: true })
             return res.status(200).json({
-                message: "success",
+                message: "Cập nhật thành công",
                 findTran
             })
         } catch (err) {
@@ -213,85 +219,96 @@ class transactionsController {
     //get Avg balance in month
     async getAvgTranInMonth(req, res) {
         try {
-            const { month, year } = req.query 
-            // Lấy ngày đầu tiên và ngày cuối cùng của tháng hiện tại
-            const startDate = new Date(year, month - 1, 1)
-            const endDate = new Date(year, month, 0, 23, 59, 59, 999)
-            // Lấy tổng số tiền của tháng hiện tại
+            const { slug_user } = req.params;
+            const { month, year } = req.query;
+    
+            // Ngày đầu tháng và ngày cuối tháng hiện tại
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    
+            // Tính tổng chi và thu cho tháng hiện tại
             const totals = await transactionsSchema.aggregate([
                 {
                     $match: {
+                        slug_user: slug_user,
                         transaction_date: {
                             $gte: startDate,
                             $lte: endDate
-                        }
+                        },
                     }
                 },
                 {
                     $group: {
-                        _id: null,
-                        totalIncome: {
-                            $sum: {
-                                $cond: [{ $eq: ["$type", "income"] }, "$amount", 0]
-                            }
-                        },
-                        totalExpense: {
-                            $sum: {
-                                $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0]
-                            }
-                        }
+                        _id: { type: "$type" },
+                        totalAmount: { $sum: "$amount" }
                     }
                 }
-            ])
-            // // Lấy tháng trước đó
-            const prevStartDate = new Date(year, month - 2, 1)
-            const prevEndDate = new Date(year, month - 1, 0, 23, 59, 59, 999)
-            // Lấy tổng số tiền của tháng trước
+            ]);
+    
+            // Tính số ngày trong tháng hiện tại
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const totalExpenseThisMonth = totals.find(item => item._id.type === "expense")?.totalAmount || 0;
+            const totalIncomeThisMonth = totals.find(item => item._id.type === "income")?.totalAmount || 0;
+            const avgExpenseThisMonth = totalExpenseThisMonth / daysInMonth;
+            const avgIncomeThisMonth = totalIncomeThisMonth / daysInMonth;
+    
+            // Ngày đầu tháng và ngày cuối tháng trước
+            const prevStartDate = new Date(year, month - 2, 1);
+            const prevEndDate = new Date(year, month - 1, 0, 23, 59, 59, 999);
+    
+            // Tính tổng chi và thu cho tháng trước
             const totalsPrev = await transactionsSchema.aggregate([
                 {
                     $match: {
+                        slug_user: slug_user,
                         transaction_date: {
                             $gte: prevStartDate,
                             $lte: prevEndDate
-                        }
+                        },
                     }
                 },
                 {
                     $group: {
-                        _id: null,
-                        totalIncome: {
-                            $sum: {
-                                $cond: [{ $eq: ["$type", "income"] }, "$amount", 0]
-                            }
-                        },
-                        totalExpense: {
-                            $sum: {
-                                $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0]
-                            }
-                        }
+                        _id: { type: "$type" },
+                        totalAmount: { $sum: "$amount" }
                     }
                 }
-            ])
+            ]);
+    
+            // Tính số ngày trong tháng trước
+            const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
+            const totalExpensePrevMonth = totalsPrev.find(item => item._id.type === "expense")?.totalAmount || 0;
+            const totalIncomePrevMonth = totalsPrev.find(item => item._id.type === "income")?.totalAmount || 0;
+            const avgExpensePrevMonth = totalExpensePrevMonth / daysInPrevMonth;
+            const avgIncomePrevMonth = totalIncomePrevMonth / daysInPrevMonth;
+    
             return res.status(200).json({
                 message: "success",
-                data :{
+                data: {
                     thisMonth: {
-                        totalTranExpense: totals[0].totalExpense,
-                        totalTranInCome: totals[0].totalIncome,
-                    },prevMonth: {
-                        totalTranExpense: totalsPrev[0].totalExpense,
-                        totalTranInCome: totalsPrev[0].totalIncome,
+                        totalExpense: totalExpenseThisMonth,
+                        totalIncome: totalIncomeThisMonth,
+                        avgExpensePerDay: avgExpenseThisMonth,
+                        avgIncomePerDay: avgIncomeThisMonth
+                    },
+                    prevMonth: {
+                        totalExpense: totalExpensePrevMonth,
+                        totalIncome: totalIncomePrevMonth,
+                        avgExpensePerDay: avgExpensePrevMonth,
+                        avgIncomePerDay: avgIncomePrevMonth
                     }
                 }
-            })
+            });
         } catch (err) {
             return res.status(500).json({
-                message: `Lỗi ${err}`
-            })
+                message: `Error: ${err.message}`
+            });
         }
     }
+    
     async getMonthlySumTran(req, res) {
-        const { year } = req.query;
+        const { slug_user } = req.params
+        const { year } = req.query
         if (!year || isNaN(year)) {
             return res.status(400).json({ message: "Năm không hợp lệ" })
         }
@@ -299,6 +316,7 @@ class transactionsController {
             const transactions = await transactionsSchema.aggregate([
                 {
                     $match: {
+                        slug_user:slug_user,
                         transaction_date: {
                             $gte: new Date(`${year}-01-01`),
                             $lt: new Date(`${parseInt(year) + 1}-01-01`)
@@ -333,16 +351,14 @@ class transactionsController {
                     $sort: { _id: 1 }
                 }
             ])
-            // Khởi tạo mảng kết quả với tất cả các tháng và giá trị mặc định là 0
             const monthlyAverages = Array.from({ length: 12 }, (_, i) => ({
                 month: i + 1,
                 income: 0,
                 expense: 0,
                 net: 0
             }))
-            // Cập nhật kết quả với dữ liệu thực tế
             transactions.forEach(month => {
-                const monthIndex = month._id - 1; // Chỉ số tháng (0-11)
+                const monthIndex = month._id - 1
                 monthlyAverages[monthIndex] = {
                     month: month._id,
                     income: month.income || 0,
@@ -353,7 +369,7 @@ class transactionsController {
             return res.status(200).json({
                 message: "Success",
                 monthlyAverages
-            });
+            })
         } catch (err) {
             console.error('Error fetching monthly averages:', err);
             return res.status(500).json({
@@ -362,6 +378,7 @@ class transactionsController {
         }
     }
     async getAverageIncomeAndExpensePerMonth(req, res) {
+        const { slug_user } = req.params
         const { year } = req.query
         if (!year || isNaN(year)) {
             return res.status(400).json({ message: "Năm không hợp lệ" })
@@ -370,6 +387,7 @@ class transactionsController {
             const results = await transactionsSchema.aggregate([
                 {
                     $match: {
+                        slug_user:slug_user,
                         transaction_date: {
                             $gte: new Date(`${year}-01-01`),
                             $lt: new Date(`${parseInt(year) + 1}-01-01`)

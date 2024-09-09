@@ -14,7 +14,7 @@ Router.post('/createCatByUser/:userId',verifyTokenUser,uploadCloud.single("image
 Router.get('/getAllCat/:userId',verifyTokenUser,categoriesController.getAllCategories)
 
 // [updateCategories]
-Router.put('/updateCat/:userId',verifyTokenUser,categoriesController.updateCategories)
+Router.put('/updateCat/:catId/:userId',verifyTokenUser,categoriesController.updateCategories)
 
 //[deleteCategories]
 Router.delete('/deleteCat/:catId/:userId',verifyTokenUser,categoriesController.deleteCategories)
