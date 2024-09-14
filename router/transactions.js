@@ -21,7 +21,7 @@ Router.get('/allTranExpense/:userId',verifyTokenUser,transactionsController.getA
 Router.delete('/deleteTran/:tranId/:userId',verifyTokenUser,transactionsController.deleteTran)
 
 // [updateTransactions]
-Router.put('/updateTransactions/:tranId/:userId',verifyTokenUser,transactionsController.updateTransactions)
+Router.put('/updateTransactions/:tranId/:userId/:type',verifyTokenUser,transactionsController.updateTransactions)
 
 //[getDetailTransactions]
 Router.get('/getDetailTran/:tranId/:userId',verifyTokenUser,transactionsController.getDetailTransactions)
@@ -39,6 +39,10 @@ Router.get('/getSumTranByMonth/:userId/:slug_user',verifyTokenUser,transactionsC
 //[spread All sum avg by month by year]
 Router.get('/getAvgTranByMonth/:userId/:slug_user',verifyTokenUser,transactionsController.getAverageIncomeAndExpensePerMonth)
 
+//[find transaction by keyword ]
+Router.get('/findTran/:userId',verifyTokenUser,transactionsController.findTransactions)
 
+//[find and filter transaction by keyword ]
+Router.get('/filterTran/:userId',verifyTokenUser,transactionsController.filterTransactions)
 
 module.exports=Router

@@ -2,7 +2,7 @@ const transactionsSchema = require("../model/transactionsModel")
 const accountSchema = require("../model/accountsModel")
 
 const userSchema = require("../model/userModel")
-const mongoose = require('mongoose')
+
 
 class transactionsController {
     //[create tran expense]
@@ -186,21 +186,42 @@ class transactionsController {
             })
         }
     }
-    //update tran
+    // Update transaction
     async updateTransactions(req, res) {
         try {
-            const { tranId } = req.params
-            const findTran = await transactionsSchema.findByIdAndUpdate(tranId, req.body, { new: true })
+            const { tranId, type } = req.params
+            const { desc_transaction, transaction_name, amount } = req.body
+            const findTran = await transactionsSchema.findById(tranId)
+            if (!findTran) {
+                return res.status(404).json({ message: "Giao dịch không tìm thấy" })
+            }
+            const findAccount = await accountSchema.findById(findTran.account)
+            if (!findAccount) {
+                return res.status(404).json({ message: "Tài khoản không tìm thấy" })
+            }
+            if (type === "expense") {
+                findAccount.balance += findTran.amount
+                findAccount.balance -= amount
+            } else {
+                findAccount.balance -= findTran.amount
+                findAccount.balance += amount
+            }
+            await findAccount.save()
+            await transactionsSchema.findByIdAndUpdate(tranId, {
+                desc_transaction,
+                transaction_name,
+                amount
+            }, { new: true })
             return res.status(200).json({
                 message: "Cập nhật thành công",
-                findTran
             })
         } catch (err) {
             return res.status(500).json({
-                message: `Lỗi ${err}`
+                message: `Lỗi: ${err.message}`
             })
         }
     }
+
     //get Detail Transactions
     async getDetailTransactions(req, res) {
         try {
@@ -305,7 +326,6 @@ class transactionsController {
             });
         }
     }
-    
     async getMonthlySumTran(req, res) {
         const { slug_user } = req.params
         const { year } = req.query
@@ -470,6 +490,68 @@ class transactionsController {
             console.error('Error fetching average income and expense:', err);
             return res.status(500).json({
                 message: `Lỗi: ${err.message}`
+            })
+        }
+    }
+    async findTransactions(req, res) {
+        try {
+            const { keyword,type } = req.query
+            const findTran = await transactionsSchema.find({
+                type: type,
+                transaction_name: {
+                    $regex: keyword, $options: 'i' // Tìm kiếm không phân biệt hoa thường
+                }
+            })
+            .populate({
+                path: 'category',
+                select: 'categories_image', 
+            })
+            .populate({
+                path: 'incomeType',
+                select: 'income_type_image', 
+            })
+            return res.status(200).json({
+                message: "Tìm kiếm thành công",
+                findTran
+            })
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi ${err}`
+            })
+        }
+    }
+    async filterTransactions(req, res) {
+        try {
+            const { date, categoryId ,type} = req.query
+            let filterConditions = {}
+            // Nếu có tham số lọc theo thời gian
+            if (date) {
+                const selectedDate = new Date(date)
+                filterConditions.transaction_date = {
+                    $gte: selectedDate.setHours(0, 0, 0, 0), // Ngày bắt đầu (00:00:00)
+                    $lt: new Date(selectedDate.setDate(selectedDate.getDate() + 1)).setHours(0, 0, 0, 0) // Ngày kết thúc (23:59:59)
+                }
+            }
+            if (categoryId) {
+                filterConditions.category = categoryId
+            }
+            if (Object.keys(filterConditions).length===0) {
+                return res.status(403).json({
+                    message: "Không có kết quả tìm kiếm!",
+                })
+            }
+            const transactions = await transactionsSchema.find({...filterConditions,type: type})
+            .populate({
+                path: 'category',
+                select: 'categories_image', 
+            })
+            return res.status(200).json({
+                message: "Tìm kiếm thành công",
+                transactions
+            })
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi ${err}`
             })
         }
     }
