@@ -1,9 +1,8 @@
 // app.js
 const express = require('express');
-const route = require('./router');
+// const route = require('./router');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-const morgan = require('morgan');
+const bodyParser = require('body-parser'); // doc duoc du lieu gui tu FE ve
 const app = express();
 const db = require('./config/database')
 
@@ -15,10 +14,6 @@ const port = 3000 || process.env.PORT
 
 // Limit data
 app.use(bodyParser.json({ limit: '50mb' }))
-
-// HTTP logger
-app.use(morgan('combined'))
-
 
 app.get('/',(req,res)=>{
     res.send("hello word")
@@ -32,7 +27,7 @@ app.get('/',(req,res)=>{
 // // }
 // ));
 app.use(cors())
-route(app)
+// route(app)
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
