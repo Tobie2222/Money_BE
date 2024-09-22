@@ -1,6 +1,3 @@
-const Account = require("../model/accountsModel");
-const Transaction = require("../model/transactionsModel");
-const SavingTransaction = require("../model/savingTransactionModel");
 const db = require("../config/database");
 const Joi = require('joi');
 
