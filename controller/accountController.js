@@ -34,7 +34,8 @@ class AccountController {
             );
 
             return res.status(200).json({
-                message: "Tạo tài khoản mới thành công"
+                message: "Tạo tài khoản mới thành công",
+                newAccount
             });
 
         } catch (err) {
