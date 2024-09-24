@@ -1,17 +1,49 @@
+const { DataTypes } = require('sequelize');
 const db = require('../config/database');
 
-const Saving = {
-  saving_id: 'saving_id',
-  user_id: 'user_id',
-  deadline: 'deadline',
-  saving_name: 'saving_name',
-  desc_saving: 'desc_saving',
-  saving_image: 'saving_image',
-  saving_date: 'saving_date',
-  goal_amount: 'goal_amount',
-  current_amount: 'current_amount',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
-};
+
+const Saving = db.define('Saving', {
+  saving_name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  desc_saving: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  goal_amount: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  current_amount: {
+    type: DataTypes.FLOAT,
+    defaultValue: 0,
+  },
+  deadline: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  saving_date: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  saving_image: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "https://cdn.pixabay.com/photo/2021/04/16/10/19/piggy-bank-6183186_960_720.png",
+  },
+
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users', 
+      key: 'id',
+    },
+  },
+}, {
+  timestamps: true, 
+  tableName: 'savings',
+});
 
 module.exports = Saving;

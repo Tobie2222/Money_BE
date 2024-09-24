@@ -1,14 +1,41 @@
+const { DataTypes } = require('sequelize');
 const db = require('../config/database');
 
-const Account = {
-  account_id: 'account_id',
-  user_id: 'user_id',
-  account_name: 'account_name',
-  desc_account: 'desc_account',
-  balance: 'balance',
-  account_types_id: 'account_types_id',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
-};
 
+const Account = db.define('Account', {
+  account_name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  desc_account: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  balance: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users', 
+      key: 'id',
+    },
+  },
+  account_types_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'account_types', 
+      key: 'id',
+    },
+  },
+}, {
+  timestamps: true, 
+  tableName: 'accounts', 
+});
+
+Account.hasMany('Transaction', { foreignKey: 'account_id' });
 module.exports = Account;

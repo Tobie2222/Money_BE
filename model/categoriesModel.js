@@ -1,13 +1,34 @@
+const { DataTypes } = require('sequelize');
 const db = require('../config/database');
 
-const Category = {
-  category_id: 'category_id',
-  user_id: 'user_id',
-  category_name: 'category_name',
-  is_global: 'is_global',
-  image: 'image',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
-};
+
+const Category = db.define('Category', {
+  category_name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true, 
+  },
+  is_global: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false, 
+  },
+  category_image: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+ 
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true, 
+    references: {
+      model: 'users', 
+      key: 'id',
+    },
+  },
+}, {
+  timestamps: true, 
+  tableName: 'categories', 
+});
 
 module.exports = Category;
