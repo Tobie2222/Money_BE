@@ -1,17 +1,24 @@
-  const mysql = require('mysql2');
+const { Sequelize } = require('sequelize');
+const dotenv = require('dotenv');
 
-  const connection = mysql.createConnection({
-    host: 'localhost', 
-    user: 'root', 
-    password: 'root', 
-    database: 'Money' 
-  });
-  connection.connect((err) => {
-    if (err) {
-      console.error('Error connecting to MySQL:', err);
-      return;
-    }
-    console.log('Connected to MySQL!');
-  });
-  // Export kết nối để sử dụng trong các file khác
-  module.exports = connection;
+
+dotenv.config();
+
+// Tạo đối tượng Sequelize để kết nối MySQL
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+  host: process.env.DB_HOST,
+  dialect: 'mysql', 
+  logging: false    
+});
+
+// Kiểm tra kết nối
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Kết nối MySQL thành công!');
+  } catch (err) {
+    console.error('Không thể kết nối MySQL:', err);
+  }
+})();
+
+module.exports = sequelize;

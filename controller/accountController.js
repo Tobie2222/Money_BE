@@ -23,7 +23,7 @@ class AccountController {
             const { id_accountType, userId } = req.params;
             const { account_name, desc_account, balance } = req.body;
 
-            const existingAccount = await Account.findOne({ where: { account_name } });
+            const existingAccount = await Account.findOne({ where:  { account_name } });
             if (existingAccount) {
                 return res.status(403).json({ message: "Tài khoản đã tồn tại" });
             }

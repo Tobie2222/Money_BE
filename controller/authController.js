@@ -3,12 +3,15 @@ const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const slug = require('slug');
 const nodemailer = require('nodemailer');
-const { User } = require('../models'); // Assuming you have a User model in models folder
+const  User  = require('../model/userModel'); 
 require('dotenv').config();
 
 // Configure Nodemailer transporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
+    secure: true,
+    host:'smtp.gmail.com',
+    port: 465,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -22,15 +25,15 @@ class AuthController {
             const schema = Joi.object({
                 name: Joi.string().required(),
                 email: Joi.string().email().required(),
-                password: Joi.string().required(),
-                sex: Joi.string().valid('male', 'female', 'other').required(),
+                password: Joi.string().min(6).required(),
+                gender: Joi.string().valid('male', 'female', 'other').required(),
             });
-
+            const { name, email, password, gender } = req.body;
             const { error } = schema.validate(req.body);
             if (error) {
                 return res.status(400).json({ message: error.details[0].message });
             }
-            const { name, email, password, sex } = req.body;
+        
 
             // Check if email already exists
             const existingUser = await User.findOne({ where: { email } });
@@ -50,7 +53,7 @@ class AuthController {
                 name,
                 email,
                 password: hashedPassword,
-                sex,
+                gender,
                 slug_user: userSlug
             });
 

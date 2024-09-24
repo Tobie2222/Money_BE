@@ -1,9 +1,12 @@
 const { DataTypes } = require('sequelize');
 const db = require('../config/database');
-const { Transaction } = require('../model/transactionsModel'); 
-
 
 const User = db.define('User', {
+  user_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -42,10 +45,9 @@ const User = db.define('User', {
     allowNull: true,
   },
 }, {
-  timestamps: true, 
+  timestamps: false, 
   tableName: 'users', 
 });
 
-User.hasMany(Transaction, { foreignKey: 'user_id' });
-Transaction.belongsTo(User, { foreignKey: 'user_id' });
+User.sync();
 module.exports = User;

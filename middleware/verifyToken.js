@@ -1,11 +1,7 @@
-// Middleware trong lập trình web, đặc biệt với Node.js và Express.js, 
-// là một hàm có quyền truy cập vào đối tượng yêu cầu (req), đối tượng phản hồi (res), 
-// và hàm tiếp theo trong chuỗi thực thi (next)
- const jwt = require("jsonwebtoken") // import thu vien jsonwebtoken
- const dotenv = require("dotenv") // import thu vien dotenv
- dotenv.config();
+const jwt = require("jsonwebtoken") 
+const dotenv = require("dotenv") 
+dotenv.config();
 
-// Xac thuc token
   const verifyToken = (req,res,next) => {
     const tokenHeader = req.headers.token;
     if(!tokenHeader){
@@ -13,7 +9,7 @@
             message: "Access denied. No token provided."
         })
     };
-    // Tách token từ chuỗi "Bearer <token>"
+    
     const token = tokenHeader.split(" ")[1];
     jwt.verify(token,process.env.TOKEN_KEY, (err,user) => {
         if (err) return res.status(403).json({ message: "Token is invalid." });
@@ -22,7 +18,6 @@
     })
 }
 
-//Xac thuc nguoi dung
  const verifyUser = (req,res,next) => {
     verifyToken(req,res,() => {
         if (req.user && req.user.id === parseInt(req.params.userId)) {
@@ -33,7 +28,6 @@
     })
  }
 
-// Xac thuc admin
 const verifyAdmin = (req,res,next) => {
     verifyToken(req,res,() => {
         if(req.user && req.user.isAdmin){
