@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../config/database');
+const { Transaction } = require('../model/transactionsModel'); 
 
 
 const User = db.define('User', {
@@ -45,4 +46,6 @@ const User = db.define('User', {
   tableName: 'users', 
 });
 
+User.hasMany(Transaction, { foreignKey: 'user_id' });
+Transaction.belongsTo(User, { foreignKey: 'user_id' });
 module.exports = User;

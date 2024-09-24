@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../config/database');
-
+const { Transaction } = require('../model/transactionsModel'); 
 
 const Account = db.define('Account', {
   account_name: {
@@ -38,4 +38,5 @@ const Account = db.define('Account', {
 });
 
 Account.hasMany('Transaction', { foreignKey: 'account_id' });
+Transaction.belongsTo(Account, { foreignKey: 'account_id' });
 module.exports = Account;

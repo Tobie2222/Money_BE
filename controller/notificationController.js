@@ -1,5 +1,4 @@
-const db = require('../config/database');
-
+const { Notification, UserNotification, User } = require('../models'); 
 class NotificationController {
     // Create notification
     async createNotification(req, res) {
@@ -8,36 +7,41 @@ class NotificationController {
             const { notification_name, desc_notification, priority } = req.body;
 
             // Check if the user is an admin
-            const [admin] = await db.execute(
-                'SELECT * FROM users WHERE user_id = ? AND isAdmin = 1', [userId]
-            );
-            if (admin.length === 0) {
+            const admin = await User.findOne({
+                where: {
+                    id: userId,
+                    isAdmin: true
+                }
+            });
+
+            if (!admin) {
                 return res.status(403).json({
                     message: 'Bạn không có quyền thực hiện hành động này'
                 });
             }
 
-            // Insert new notification
-            const [result] = await db.execute(
-                'INSERT INTO notifications (notification_name, desc_notification, priority, type) VALUES (?, ?, ?, ?)',
-                [notification_name, desc_notification, priority, 'admin']
-            );
-            const notificationId = result.insertId;
+            // Create new notification
+            const notification = await Notification.create({
+                notification_name,
+                desc_notification,
+                priority,
+                type: 'admin'
+            });
 
             // Get all users
-            const [users] = await db.execute(
-                'SELECT user_id FROM users'
-            );
-            const userNotifications = users.map(user => [user.user_id, notificationId, 'unread']);
+            const users = await User.findAll({ attributes: ['id'] });
+            const userNotifications = users.map(user => ({
+                user_id: user.id,
+                notification_id: notification.id,
+                status: 'unread'
+            }));
 
             // Insert user notifications in batch
-            await db.execute(
-                'INSERT INTO user_notifications (user_id, notification_id, status) VALUES ?', [userNotifications]
-            );
+            await UserNotification.bulkCreate(userNotifications);
 
             return res.status(201).json({
                 message: 'Tạo thông báo thành công',
-                notificationId
+                notificationId: notification.id
             });
         } catch (err) {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
@@ -51,15 +55,13 @@ class NotificationController {
             const { limit = 10, offset = 0 } = req.query;
 
             // Get all notifications for the user, sorted by createdAt
-            const [notifications] = await db.execute(
-                `SELECT n.*, un.status 
-                 FROM user_notifications un 
-                 JOIN notifications n ON un.notification_id = n.notification_id 
-                 WHERE un.user_id = ? 
-                 ORDER BY n.created_at DESC 
-                 LIMIT ? OFFSET ?`, 
-                 [userId, Number(limit), Number(offset)]
-            );
+            const notifications = await UserNotification.findAll({
+                where: { user_id: userId },
+                include: [{ model: Notification }],
+                limit: parseInt(limit),
+                offset: parseInt(offset),
+                order: [['createdAt', 'DESC']]
+            });
 
             return res.status(200).json({
                 message: 'Success',
@@ -72,34 +74,32 @@ class NotificationController {
 
     // Delete notification
     async deleteNotification(req, res) {
-        const connection = await db.getConnection();
+        const transaction = await db.transaction();
         try {
             const { notificationId } = req.params;
-            await connection.beginTransaction();
 
             // Find the notification
-            const [notification] = await connection.execute('SELECT * FROM notifications WHERE notification_id = ?', [notificationId]);
-            if (notification.length === 0) {
-                await connection.rollback();
+            const notification = await Notification.findOne({
+                where: { id: notificationId }
+            });
+
+            if (!notification) {
                 return res.status(404).json({ message: 'Thông báo không tồn tại' });
             }
 
-            if (notification[0].type === 'admin') {
-                await connection.rollback();
+            if (notification.type === 'admin') {
                 return res.status(403).json({ message: 'Bạn không được phép xóa thông báo từ admin' });
             }
 
-            // Delete from user_notifications and notifications
-            await connection.execute('DELETE FROM user_notifications WHERE notification_id = ?', [notificationId]);
-            await connection.execute('DELETE FROM notifications WHERE notification_id = ?', [notificationId]);
+            // Delete from UserNotifications and Notifications
+            await UserNotification.destroy({ where: { notification_id: notificationId }, transaction });
+            await Notification.destroy({ where: { id: notificationId }, transaction });
 
-            await connection.commit();
+            await transaction.commit();
             return res.status(204).send(); // No Content
         } catch (err) {
-            await connection.rollback();
+            await transaction.rollback();
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
-        } finally {
-            connection.release();
         }
     }
 
@@ -109,9 +109,12 @@ class NotificationController {
             const { userNotificationId } = req.params;
 
             // Update the status to read
-            const [result] = await db.execute('UPDATE user_notifications SET status = ? WHERE id = ?', ['read', userNotificationId]);
+            const result = await UserNotification.update(
+                { status: 'read', read_at: new Date() },
+                { where: { id: userNotificationId } }
+            );
 
-            if (result.affectedRows === 0) {
+            if (result[0] === 0) {
                 return res.status(404).json({
                     message: "Thông báo không tồn tại"
                 });

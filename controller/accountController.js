@@ -1,8 +1,12 @@
-const db = require("../config/database");
+const Account = require('../models/Account');
+const AccountType = require('../models/AccountType');
+const Transaction = require('../models/Transaction');
+const IncomeType = require('../models/IncomeType');
+const Category = require('../models/Category');
 const Joi = require('joi');
 
 class AccountController {
-    // Tạo tài khoản
+    // Create a new account
     async createAccount(req, res) {
         try {
             const schema = Joi.object({
@@ -10,28 +14,27 @@ class AccountController {
                 desc_account: Joi.string().allow(' '),
                 balance: Joi.number().min(0).required()
             });
-            // Xác thực dữ liệu đầu vào
+
             const { error } = schema.validate(req.body);
             if (error) {
-                return res.status(400).json({
-                    message: error.details[0].message
-                });
+                return res.status(400).json({ message: error.details[0].message });
             }
 
             const { id_accountType, userId } = req.params;
             const { account_name, desc_account, balance } = req.body;
 
-            const [findAccount] = await db.execute('SELECT * FROM accounts WHERE account_name = ?', [account_name]);
-            if (findAccount.length > 0) {
-                return res.status(403).json({
-                    message: "Tài khoản đã tồn tại"
-                });
+            const existingAccount = await Account.findOne({ where: { account_name } });
+            if (existingAccount) {
+                return res.status(403).json({ message: "Tài khoản đã tồn tại" });
             }
 
-            const [newAccount] = await db.execute(
-                'INSERT INTO accounts (account_name, desc_account, balance, user_id, account_types_id) VALUES (?, ?, ?, ?, ?)',
-                [account_name, desc_account, balance, userId, id_accountType]
-            );
+            const newAccount = await Account.create({
+                account_name,
+                desc_account,
+                balance,
+                user_id: userId,
+                account_types_id: id_accountType
+            });
 
             return res.status(200).json({
                 message: "Tạo tài khoản mới thành công",
@@ -39,86 +42,72 @@ class AccountController {
             });
 
         } catch (err) {
-            return res.status(500).json({
-                message: `Lỗi: ${err.message}`
-            });
+            return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
 
-    // Lấy tất cả tài khoản của user với phân trang
+    // Get all accounts by user with pagination
     async getAllAcountByUser(req, res) {
         try {
             const { userId } = req.params;
             const { page = 1, limit = 10 } = req.query;
             const offset = (page - 1) * limit;
 
-            const [allAccountByUser] = await db.execute(
-                `SELECT a.*, at.account_type_name, at.account_type_image 
-                FROM accounts a 
-                JOIN account_types at ON a.account_types_id = at.account_types_id
-                WHERE a.user_id = ? 
-                LIMIT ? OFFSET ?`,
-                [userId, parseInt(limit), parseInt(offset)]
-            );
+            const { rows: allAccountByUser, count } = await Account.findAndCountAll({
+                where: { user_id: userId },
+                include: [{ model: AccountType, as: 'accountType' }],
+                limit: parseInt(limit),
+                offset: parseInt(offset)
+            });
 
             return res.status(200).json({
                 message: "Success",
                 page,
                 limit,
+                totalCount: count,
                 allAccountByUser
             });
 
         } catch (err) {
-            return res.status(500).json({
-                message: `Lỗi: ${err.message}`
-            });
+            return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
 
-    // Lấy thông tin chi tiết của tài khoản
+    // Get account details
     async getAccountDetail(req, res) {
         try {
             const { accountId } = req.params;
-            const [account] = await db.execute(
-                `SELECT a.*, t.transaction_name, t.desc_transaction, t.amount, t.type, t.transaction_date, 
-                it.income_type_image, c.categories_image 
-                FROM accounts a 
-                LEFT JOIN transactions t ON a.account_id = t.account_id
-                LEFT JOIN income_types it ON t.income_type_id = it.income_type_id
-                LEFT JOIN categories c ON t.category_id = c.category_id
-                WHERE a.account_id = ?`,
-                [accountId]
-            );
 
-            if (account.length == 0) {
-                return res.status(404).json({
-                    message: "Tài khoản không tồn tại!"
-                });
+            const account = await Account.findByPk(accountId, {
+                include: [
+                    { model: Transaction, as: 'transactions', include: [{ model: IncomeType }, { model: Category }] }
+                ]
+            });
+
+            if (!account) {
+                return res.status(404).json({ message: "Tài khoản không tồn tại!" });
             }
 
-            // Lọc giao dịch thu nhập và chi tiêu
-            const incomeTransactions = account.filter(transaction => transaction.type === 'income');
-            const expenseTransactions = account.filter(transaction => transaction.type === 'expense');
+            const incomeTransactions = account.transactions.filter(transaction => transaction.type === 'income');
+            const expenseTransactions = account.transactions.filter(transaction => transaction.type === 'expense');
 
             return res.status(200).json({
                 message: "Success",
                 accountDetail: {
-                    account_name: account[0].account_name,
-                    desc_account: account[0].desc_account,
-                    balance: account[0].balance,
+                    account_name: account.account_name,
+                    desc_account: account.desc_account,
+                    balance: account.balance,
                     incomeTransactions,
                     expenseTransactions
                 }
             });
 
         } catch (err) {
-            return res.status(500).json({
-                message: `Lỗi: ${err.message}`
-            });
+            return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
 
-    // Cập nhật tài khoản
+    // Update account
     async updateAccount(req, res) {
         try {
             const { accountId } = req.params;
@@ -131,80 +120,56 @@ class AccountController {
 
             const { error } = schema.validate(req.body);
             if (error) {
-                return res.status(400).json({
-                    message: error.details[0].message
-                });
+                return res.status(400).json({ message: error.details[0].message });
             }
 
-            const [account] = await db.execute('SELECT * FROM accounts WHERE account_id = ?', [accountId]);
-            if (account.length === 0) {
-                return res.status(404).json({
-                    message: "Tài khoản không tồn tại!"
-                });
+            const account = await Account.findByPk(accountId);
+            if (!account) {
+                return res.status(404).json({ message: "Tài khoản không tồn tại!" });
             }
 
-            await db.execute(
-                'UPDATE accounts SET account_name = ?, desc_account = ?, balance = ? WHERE account_id = ?',
-                [req.body.account_name, req.body.desc_account, req.body.balance, accountId]
-            );
+            await account.update(req.body);
 
-            return res.status(200).json({
-                message: "Cập nhật tài khoản thành công"
-            });
+            return res.status(200).json({ message: "Cập nhật tài khoản thành công" });
 
         } catch (err) {
-            return res.status(500).json({
-                message: `Lỗi: ${err.message}`
-            });
+            return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
 
-    // Lấy ra tổng thu nhập
+    // Get total balance for a user
     async getTotalBalance(req, res) {
         try {
             const { userId } = req.params;
-            const [allAccount] = await db.execute(
-                'SELECT balance FROM accounts WHERE user_id = ?',
-                [userId]
-            );
+            const allAccount = await Account.findAll({ where: { user_id: userId } });
 
             const totalBalance = allAccount.reduce((balance, account) => account.balance + balance, 0);
-            return res.status(200).json({
-                message: "Success",
-                totalBalance
-            });
+            return res.status(200).json({ message: "Success", totalBalance });
 
         } catch (err) {
-            return res.status(500).json({
-                message: `Lỗi: ${err.message}`
-            });
+            return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
 
-    // Xóa tài khoản và rollback nếu thất bại
+    // Delete account and rollback if failed
     async deleteAccount(req, res) {
-        const connection = await db.getConnection();
+        const transaction = await db.transaction();
         try {
-            await connection.beginTransaction();
             const { accountId } = req.params;
 
-            await connection.execute('DELETE FROM accounts WHERE account_id = ?', [accountId]);
-            await connection.execute('UPDATE transactions SET account_id = NULL WHERE account_id = ?', [accountId]);
-            await connection.execute('UPDATE savings_transactions SET account_id = NULL WHERE account_id = ?', [accountId]);
+            await Account.destroy({ where: { id: accountId }, transaction });
+            await Transaction.update({ account_id: null }, { where: { account_id: accountId }, transaction });
+            await SavingTransaction.update({ account_id: null }, { where: { account_id: accountId }, transaction });
 
-            await connection.commit();
-            return res.status(200).json({
-                message: "Xóa tài khoản thành công"
-            });
+            await transaction.commit();
+            return res.status(200).json({ message: "Xóa tài khoản thành công" });
 
         } catch (err) {
-            await connection.rollback();
-            return res.status(500).json({
-                message: `Lỗi: ${err.message}`
-            });
+            await transaction.rollback();
+            return res.status(500).json({ message: `Lỗi: ${err.message}` });
 
         } finally {
-            connection.release();
+            await transaction.release();
         }
     }
 }

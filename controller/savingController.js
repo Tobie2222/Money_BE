@@ -1,4 +1,4 @@
-const db = require('../config/database'); 
+const { Saving, Account, SavingsTransaction, Notification, UserNotification } = require('../models'); // Assuming models are in the same directory
 
 class SavingController {
     // Create saving
@@ -6,20 +6,25 @@ class SavingController {
         try {
             const { userId } = req.params;
             const { saving_name, desc_saving, goal_amount, deadline, saving_date } = req.body;
-            const day = new Date();
+
+            const today = new Date();
             const deadL = new Date(deadline);
 
-            if (deadL < day) {
+            if (deadL < today) {
                 return res.status(403).json({ message: "Thời gian không hợp lệ!" });
             }
 
-            const [result] = await db.execute(
-                `INSERT INTO savings (user_id, saving_name, desc_saving, goal_amount, deadline, saving_date, saving_image) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [userId, saving_name, desc_saving, goal_amount, deadline, saving_date, req.file ? req.file.path : null]
-            );
+            const saving = await Saving.create({
+                user_id: userId,
+                saving_name,
+                desc_saving,
+                goal_amount,
+                deadline,
+                saving_date,
+                saving_image: req.file ? req.file.path : null
+            });
 
-            return res.status(201).json({ message: "Tạo mới khoản tiết kiệm thành công", result });
+            return res.status(201).json({ message: "Tạo mới khoản tiết kiệm thành công", saving });
         } catch (err) {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
@@ -29,14 +34,15 @@ class SavingController {
     async getAllSavingByUser(req, res) {
         try {
             const { userId } = req.params;
-            const [allSavings] = await db.execute(`SELECT * FROM savings WHERE user_id = ?`, [userId]);
 
-            const savingsWithRemainingAmount = allSavings.map(saving => ({
-                ...saving,
+            const savings = await Saving.findAll({ where: { user_id: userId } });
+
+            const savingsWithRemainingAmount = savings.map(saving => ({
+                ...saving.dataValues,
                 remainingAmount: saving.goal_amount - saving.current_amount
             }));
 
-            return res.status(200).json({ message: "Success", allSavings: savingsWithRemainingAmount });
+            return res.status(200).json({ message: "Success", savings: savingsWithRemainingAmount });
         } catch (err) {
             return res.status(500).json({ message: `Error: ${err.message}` });
         }
@@ -46,22 +52,22 @@ class SavingController {
     async getSavingDetails(req, res) {
         try {
             const { savingId, userId } = req.params;
-            const [saving] = await db.execute(`SELECT * FROM savings WHERE user_id = ? AND id = ?`, [userId, savingId]);
 
-            if (saving.length === 0) {
+            const saving = await Saving.findOne({ where: { id: savingId, user_id: userId } });
+
+            if (!saving) {
                 return res.status(404).json({ message: "Khoản tiết kiệm không tồn tại" });
             }
 
-            const savingDetails = saving[0];
-            const remainingAmount = savingDetails.goal_amount - savingDetails.current_amount;
+            const remainingAmount = saving.goal_amount - saving.current_amount;
             const today = new Date();
-            const deadline = new Date(savingDetails.deadline);
+            const deadline = new Date(saving.deadline);
             const remainingDate = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
 
             return res.status(200).json({
                 message: 'Success',
                 saving: {
-                    ...savingDetails,
+                    ...saving.dataValues,
                     remainingAmount,
                     remainingDate
                 }
@@ -70,13 +76,15 @@ class SavingController {
             return res.status(500).json({ message: `Error: ${err.message}` });
         }
     }
+
     // Update saving
     async updateSaving(req, res) {
         try {
             const { savingId } = req.params;
-            const [result] = await db.execute(`UPDATE savings SET ? WHERE id = ?`, [req.body, savingId]);
 
-            if (result.affectedRows === 0) {
+            const result = await Saving.update(req.body, { where: { id: savingId } });
+
+            if (result[0] === 0) {
                 return res.status(404).json({ message: "Khoản tiết kiệm không tồn tại" });
             }
 
@@ -88,92 +96,96 @@ class SavingController {
 
     // Delete saving
     async deleteSaving(req, res) {
-        const connection = await db.getConnection();
+        const transaction = await db.transaction();
         try {
             const { savingId } = req.params;
-            await connection.beginTransaction();
 
-            const [saving] = await connection.execute(`SELECT * FROM savings WHERE id = ?`, [savingId]);
+            const saving = await Saving.findOne({ where: { id: savingId } });
 
-            if (saving.length === 0) {
-                await connection.rollback();
+            if (!saving) {
+                await transaction.rollback();
                 return res.status(404).json({ message: "Khoản tiết kiệm không tồn tại" });
             }
 
-            await connection.execute(`DELETE FROM savings WHERE id = ?`, [savingId]);
-            await connection.execute(`UPDATE saving_transactions SET saving_id = NULL WHERE saving_id = ?`, [savingId]);
+            await Saving.destroy({ where: { id: savingId }, transaction });
+            await SavingsTransaction.update({ saving_id: null }, { where: { saving_id: savingId }, transaction });
 
-            await connection.commit();
+            await transaction.commit();
             return res.status(200).json({ message: "Xóa khoản tiết kiệm thành công" });
         } catch (err) {
-            await connection.rollback();
+            await transaction.rollback();
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
-        } finally {
-            connection.release();
         }
     }
 
     // Deposit money into saving
     async depositMoneySaving(req, res) {
+        const transaction = await db.transaction();
         try {
             const { savingId, accountId, userId } = req.params;
             const { amount, name_tran, transaction_date } = req.body;
             const tranDate = new Date(transaction_date);
 
-            const [saving] = await db.execute(`SELECT * FROM savings WHERE id = ?`, [savingId]);
-            const [account] = await db.execute(`SELECT * FROM accounts WHERE id = ?`, [accountId]);
+            const saving = await Saving.findOne({ where: { id: savingId }, transaction });
+            const account = await Account.findOne({ where: { id: accountId }, transaction });
 
-            if (saving.length === 0 || account.length === 0) {
+            if (!saving || !account) {
+                await transaction.rollback();
                 return res.status(404).json({ message: "Khoản tiết kiệm hoặc tài khoản không tồn tại" });
             }
 
-            const savingDetails = saving[0];
-            const accountDetails = account[0];
-
-            const deadline = new Date(savingDetails.deadline);
-            const savingDate = new Date(savingDetails.saving_date);
+            const deadline = new Date(saving.deadline);
+            const savingDate = new Date(saving.saving_date);
 
             if (deadline < tranDate || savingDate > tranDate) {
+                await transaction.rollback();
                 return res.status(403).json({ message: "Thời gian không hợp lệ!" });
             }
 
-            if (accountDetails.balance < amount) {
+            if (account.balance < amount) {
+                await transaction.rollback();
                 return res.status(403).json({ message: "Bạn không đủ tiền để gửi" });
             }
 
-            if (savingDetails.current_amount > savingDetails.goal_amount) {
+            if (saving.current_amount >= saving.goal_amount) {
+                await transaction.rollback();
                 return res.status(403).json({ message: "Bạn không thể gửi tiền nữa!" });
             }
 
-            savingDetails.current_amount += amount;
-            accountDetails.balance -= amount;
+            saving.current_amount += amount;
+            account.balance -= amount;
 
-            await db.execute(`UPDATE savings SET current_amount = ? WHERE id = ?`, [savingDetails.current_amount, savingId]);
-            await db.execute(`UPDATE accounts SET balance = ? WHERE id = ?`, [accountDetails.balance, accountId]);
+            await saving.save({ transaction });
+            await account.save({ transaction });
 
-            if (savingDetails.current_amount === savingDetails.goal_amount) {
-                const [notificationResult] = await db.execute(
-                    `INSERT INTO notifications (user_id, notification_name, desc_notification, priority, created_at, updated_at)
-                     VALUES (?, ?, ?, ?, NOW(), NOW())`,
-                    [userId, 'Mục tiêu tiết kiệm đã hoàn thành!', `Bạn đã đạt được mục tiêu tiết kiệm ${savingDetails.saving_name}. Xin chúc mừng!`, 'low']
-                );
+            if (saving.current_amount >= saving.goal_amount) {
+                const notification = await Notification.create({
+                    user_id: userId,
+                    notification_name: 'Mục tiêu tiết kiệm đã hoàn thành!',
+                    desc_notification: `Bạn đã đạt được mục tiêu tiết kiệm ${saving.saving_name}. Xin chúc mừng!`,
+                    priority: 'low'
+                }, { transaction });
 
-                const notificationId = notificationResult.insertId;
-
-                await db.execute(
-                    `INSERT INTO user_notifications (user_id, notification_id, status) VALUES (?, ?, ?)`,
-                    [userId, notificationId, 'unread']
-                );
+                await UserNotification.create({
+                    user_id: userId,
+                    notification_id: notification.id,
+                    status: 'unread'
+                }, { transaction });
             }
 
-            await db.execute(
-                `INSERT INTO saving_transactions (name_tran, transaction_date, amount, account_id, saving_id, user_id, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-                [name_tran, transaction_date, amount, accountId, savingId, userId]
-            );
+            await SavingsTransaction.create({
+                name_tran,
+                transaction_date,
+                amount,
+                account_id: accountId,
+                saving_id: savingId,
+                user_id: userId
+            }, { transaction });
 
+            await transaction.commit();
             return res.status(200).json({ message: "Gửi tiền tiết kiệm thành công" });
         } catch (err) {
+            await transaction.rollback();
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
@@ -182,9 +194,10 @@ class SavingController {
     async getAllDepositMoneySaving(req, res) {
         try {
             const { userId } = req.params;
-            const [allDeposits] = await db.execute(`SELECT * FROM saving_transactions WHERE user_id = ?`, [userId]);
 
-            return res.status(200).json({ message: "Success", allDeposits });
+            const deposits = await SavingsTransaction.findAll({ where: { user_id: userId } });
+
+            return res.status(200).json({ message: "Success", deposits });
         } catch (err) {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }

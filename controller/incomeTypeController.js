@@ -1,13 +1,13 @@
-const db = require('../config/database');
-const Joi = require('joi')
+const { IncomeType, Transaction } = require('../models'); // Assuming your models are stored in a models folder
+const Joi = require('joi');
 
 const schema = Joi.object({
     income_type_name: Joi.string().min(3).required(),
-    income_type_image: Joi.string().optional()
+    income_type_image: Joi.string().optional(),
 });
 
 class IncomeTypeController {
-    // Create global income
+    // Create global income type
     async createIncomeTypeGlobal(req, res) {
         try {
             const { error } = schema.validate(req.body);
@@ -15,24 +15,29 @@ class IncomeTypeController {
                 return res.status(400).json({ message: `Validation Error: ${error.details[0].message}` });
             }
             const { income_type_name } = req.body;
-            const [find] = await db.execute('SELECT * FROM income_type WHERE income_type_name = ?', [income_type_name]);
-            if (find.length > 0) {
-                return res.status(403).json({ message: "Danh mục thu nhập đã tồn tại" });
+
+            const find = await IncomeType.findOne({ where: { income_type_name } });
+            if (find) {
+                return res.status(403).json({ message: "Income type already exists" });
             }
             if (!req.file) {
-                return res.status(400).json({ message: "Chưa có hình ảnh" });
+                return res.status(400).json({ message: "No image provided" });
             }
-            await db.execute(
-                'INSERT INTO income_type (income_type_name, income_type_image, is_global, user_id) VALUES (?, ?, ?, null)',
-                [income_type_name, req.file.path, true]
-            );
-            return res.status(200).json({ message: 'Success' });
+
+            await IncomeType.create({
+                income_type_name,
+                income_type_image: req.file.path,
+                is_global: true,
+                user_id: null, // Global income type, no user ID
+            });
+
+            return res.status(200).json({ message: 'Income type created successfully' });
         } catch (err) {
-            return res.status(500).json({ message: `Lỗi: ${err.message}` });
+            return res.status(500).json({ message: `Error: ${err.message}` });
         }
     }
 
-    // Create user income 
+    // Create user-specific income type
     async createIncomeTypeByUser(req, res) {
         try {
             const { error } = schema.validate(req.body);
@@ -41,52 +46,63 @@ class IncomeTypeController {
             }
             const { income_type_name } = req.body;
             const { userId } = req.params;
-            const [find] = await db.execute(
-                'SELECT * FROM income_type WHERE income_type_name = ? AND user_id = ?', [income_type_name, userId]
-            );
-            if (find.length > 0) {
-                return res.status(403).json({ message: "Danh mục thu nhập đã tồn tại!" });
+
+            const find = await IncomeType.findOne({
+                where: { income_type_name, user_id: userId }
+            });
+
+            if (find) {
+                return res.status(403).json({ message: "Income type already exists for this user" });
             }
             if (!req.file) {
-                return res.status(400).json({ message: 'Chưa có hình ảnh' });
+                return res.status(400).json({ message: 'No image provided' });
             }
-            await db.execute(
-                'INSERT INTO income_type (income_type_name, income_type_image, is_global, user_id) VALUES (?, ?, ?, ?)',
-                [income_type_name, req.file.path, false, userId]
-            );
-            return res.status(200).json({ message: "Tạo mới danh mục thu nhập thành công" });
+
+            await IncomeType.create({
+                income_type_name,
+                income_type_image: req.file.path,
+                is_global: false,
+                user_id: userId,
+            });
+
+            return res.status(200).json({ message: "Income type created successfully for user" });
         } catch (err) {
-            return res.status(500).json({ message: `Lỗi: ${err.message}` });
+            return res.status(500).json({ message: `Error: ${err.message}` });
         }
     }
 
-    // Update incomeType
+    // Update income type
     async updateIncomeType(req, res) {
         try {
             const { incomeTypeId } = req.params;
-            const [findIncomeType] = await db.execute('SELECT * FROM income_type WHERE income_type_id = ?', [incomeTypeId]);
-            if (findIncomeType.length === 0) {
-                return res.status(404).json({ message: "Danh mục thu nhập không tồn tại" });
+
+            const incomeType = await IncomeType.findByPk(incomeTypeId);
+            if (!incomeType) {
+                return res.status(404).json({ message: "Income type not found" });
             }
-            if (findIncomeType[0].is_global) {
-                return res.status(403).json({ message: "Không thể cập nhật danh mục mặc định" });
+            if (incomeType.is_global) {
+                return res.status(403).json({ message: "Cannot update a global income type" });
             }
+
             const { error } = schema.validate(req.body, { allowUnknown: true });
             if (error) {
                 return res.status(400).json({ message: `Validation Error: ${error.details[0].message}` });
             }
+
             const { income_type_name, income_type_image } = req.body;
-            await db.execute(
-                'UPDATE income_type SET income_type_name = ?, income_type_image = ? WHERE income_type_id = ?',
-                [income_type_name || findIncomeType[0].income_type_name, income_type_image || findIncomeType[0].income_type_image, incomeTypeId]
-            );
-            return res.status(200).json({ message: "Cập nhật danh mục thu nhập thành công" });
+
+            await incomeType.update({
+                income_type_name: income_type_name || incomeType.income_type_name,
+                income_type_image: income_type_image || incomeType.income_type_image
+            });
+
+            return res.status(200).json({ message: "Income type updated successfully" });
         } catch (err) {
-            return res.status(500).json({ message: `Lỗi: ${err.message}` });
+            return res.status(500).json({ message: `Error: ${err.message}` });
         }
     }
 
-    // Get all incomeTypes with pagination
+    // Get all income types with pagination
     async getAllIncomeType(req, res) {
         try {
             const { userId } = req.params;
@@ -94,38 +110,44 @@ class IncomeTypeController {
             const page = parseInt(req.query.page) || 1;
             const offset = (page - 1) * limit;
 
-            const [allIncomeType] = await db.execute(
-                'SELECT * FROM income_type WHERE user_id = ? OR is_global = true LIMIT ? OFFSET ?',
-                [userId, limit, offset]
-            );
+            const incomeTypes = await IncomeType.findAll({
+                where: {
+                    user_id: userId,
+                    is_global: true
+                },
+                limit,
+                offset
+            });
 
-            return res.status(200).json({ message: "Success", allIncomeType });
+            return res.status(200).json({ message: "Success", incomeTypes });
         } catch (err) {
-            return res.status(500).json({ message: `Lỗi: ${err.message}` });
+            return res.status(500).json({ message: `Error: ${err.message}` });
         }
     }
 
-    // Delete IncomeType
+    // Delete income type
     async deleteIncomeType(req, res) {
-        const connection = await db.getConnection();
+        const transaction = await db.transaction();
         try {
-            const { incomeTypeId, userId } = req.params;
-            await connection.beginTransaction();
-            const [findIn] = await connection.execute('SELECT * FROM income_type WHERE income_type_id = ?', [incomeTypeId]);
-            if (findIn.length == 0) {
-                await connection.rollback();
-                return res.status(404).json({ message: "Danh mục thu nhập không tồn tại" });
-            }
-            await connection.execute('DELETE FROM income_type WHERE income_type_id = ?', [incomeTypeId]);
-            await connection.execute('UPDATE transactions SET income_type_id = NULL WHERE income_type_id = ?', [incomeTypeId]);
+            const { incomeTypeId } = req.params;
 
-            await connection.commit();
-            return res.status(200).json({ message: "Xóa danh mục thu nhập thành công" });
+            const incomeType = await IncomeType.findByPk(incomeTypeId);
+            if (!incomeType) {
+                return res.status(404).json({ message: "Income type not found" });
+            }
+
+            // Delete the income type and update related transactions
+            await incomeType.destroy({ transaction });
+            await Transaction.update(
+                { income_type_id: null },
+                { where: { income_type_id: incomeTypeId }, transaction }
+            );
+
+            await transaction.commit();
+            return res.status(200).json({ message: "Income type deleted successfully" });
         } catch (err) {
-            await connection.rollback();
-            return res.status(500).json({ message: `Lỗi: ${err.message}` });
-        } finally {
-            connection.release();
+            await transaction.rollback();
+            return res.status(500).json({ message: `Error: ${err.message}` });
         }
     }
 }

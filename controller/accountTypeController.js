@@ -1,42 +1,48 @@
-const db = require("../config/database");
+const { AccountType, Account } = require('../models');
+const Joi = require('joi');
 
 class AccountTypeController {
-    // Tạo loại tài khoản
+    // Create a new account type
     async createAccountType(req, res) {
         try {
-            const { account_type_name } = req.body;
-            if (!account_type_name) {
-                return res.status(400).json({ message: "Thiếu thông tin cần thiết" });
+            const schema = Joi.object({
+                account_type_name: Joi.string().required(),
+                account_type_image: Joi.string().required()
+            });
+
+            const { error } = schema.validate(req.body);
+            if (error) {
+                return res.status(400).json({ message: error.details[0].message });
             }
 
-            // Kiểm tra xem loại tài khoản đã tồn tại chưa
-            const [existingAccountType] = await db.execute(
-                'SELECT * FROM account_types WHERE account_type_name = ?',
-                [account_type_name]
-            );
-            if (existingAccountType.length > 0) {
+            const { account_type_name, account_type_image } = req.body;
+
+            // Check if the account type already exists
+            const existingAccountType = await AccountType.findOne({ where: { account_type_name } });
+            if (existingAccountType) {
                 return res.status(403).json({ message: "Loại tài khoản đã tồn tại" });
             }
 
-            // Thêm loại tài khoản mới
-            const [newAccountType] = await db.execute(
-                'INSERT INTO account_types (account_type_name, account_type_image) VALUES (?, ?)',
-                [account_type_name, req.file.path]
-            );
+            // Create a new account type
+            const newAccountType = await AccountType.create({
+                account_type_name,
+                account_type_image: req.file.path
+            });
 
             return res.status(200).json({
                 message: "Tạo loại tài khoản thành công",
                 newAccountType
             });
+
         } catch (err) {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
 
-    // Lấy tất cả các loại tài khoản
+    // Get all account types
     async getAllAccountType(req, res) {
         try {
-            const [allAccountType] = await db.execute('SELECT * FROM account_types');
+            const allAccountType = await AccountType.findAll();
             if (allAccountType.length === 0) {
                 return res.status(200).json({ message: "Không có loại tài khoản nào", allAccountType: [] });
             }
@@ -46,31 +52,46 @@ class AccountTypeController {
         }
     }
 
-    // Xóa loại tài khoản
+    // Delete an account type
     async deleteAccountType(req, res) {
-        const connection = await db.getConnection();
+        const transaction = await db.transaction();
         try {
             const { id } = req.params;
             if (!id) {
                 return res.status(400).json({ message: "Thiếu ID loại tài khoản" });
             }
-            await connection.beginTransaction();
-            // Xóa loại tài khoản
-            const [deleteResult] = await connection.execute('DELETE FROM account_types WHERE account_types_id = ?', [id]);
-            if (deleteResult.affectedRows === 0) {
-                await connection.rollback(); // Rollback nếu không xóa được
+
+            // Start transaction
+            await transaction.startTransaction();
+
+            // Check if the account type exists
+            const accountType = await AccountType.findByPk(id);
+            if (!accountType) {
+                await transaction.rollback();
                 return res.status(404).json({ message: "Loại tài khoản không tồn tại" });
             }
 
-            await connection.execute('UPDATE accounts SET account_types_id = NULL WHERE account_types_id = ?', [id]);
-            await connection.commit();
+            // Delete account type
+            await accountType.destroy({ transaction });
+
+            // Update accounts to set account_types_id to NULL
+            await Account.update(
+                { account_types_id: null },
+                { where: { account_types_id: id }, transaction }
+            );
+
+            // Commit transaction
+            await transaction.commit();
             return res.status(200).json({ message: "Xóa loại tài khoản thành công" });
+
         } catch (err) {
-            await connection.rollback(); // Rollback nếu có lỗi
+            await transaction.rollback();
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
+
         } finally {
-            connection.release(); 
+            await transaction.release();
         }
     }
 }
+
 module.exports = new AccountTypeController();

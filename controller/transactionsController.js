@@ -1,7 +1,10 @@
-const connection = require('../config/database'); // Đảm bảo đường dẫn chính xác tới file cấu hình
+const connection = require('../config/database'); // Ensure the correct path to the config file
+const { Transaction } = require('../model/transactionsModel'); // Import the Transaction model
+const { Account } = require('../model/accountsModel'); // Import the Account model
+const { User } = require('../model/userModel'); // Import the User model
 
 class TransactionsController {
-
+  
   // Helper method to get account by ID
   async getAccountById(accountId) {
     return new Promise((resolve, reject) => {
@@ -27,7 +30,7 @@ class TransactionsController {
     });
   }
 
-  // [create tran expense]
+  // [Create Expense Transaction]
   async createExpenseTransactions(req, res) {
     const { accountId, userId, categoryId } = req.params;
     const { transaction_name, desc_transaction, amount, transaction_date } = req.body;
@@ -72,7 +75,7 @@ class TransactionsController {
     }
   }
 
-  // [create tran income]
+  // [Create Income Transaction]
   async createIncomeTransactions(req, res) {
     const { accountId, incomeTypeId, userId } = req.params;
     const { transaction_name, desc_transaction, amount, transaction_date } = req.body;
@@ -113,6 +116,7 @@ class TransactionsController {
     }
   }
 
+  // Get recent transactions by user
   async getRecentTranByUser(req, res) {
     const { userId } = req.params;
     const twoDaysAgo = new Date();
@@ -144,6 +148,7 @@ class TransactionsController {
     }
   }
 
+  // Get all income transactions by user
   async getAllTranIncome(req, res) {
     const { userId } = req.params;
 
@@ -164,6 +169,7 @@ class TransactionsController {
     }
   }
 
+  // Get all expense transactions by user
   async getAllTranExpense(req, res) {
     const { userId } = req.params;
 
@@ -184,6 +190,7 @@ class TransactionsController {
     }
   }
 
+  // Delete transaction
   async deleteTran(req, res) {
     const { tranId } = req.params;
 
@@ -224,17 +231,14 @@ class TransactionsController {
                   });
                 }
 
-                res.status(200).json({
-                  message: "Transaction deleted successfully",
-                  deletedTransaction: transaction
+                return res.status(200).json({
+                  message: "Transaction deleted successfully"
                 });
               });
             });
           });
         });
-
       });
-
     } catch (err) {
       return res.status(500).json({ message: `Error: ${err.message}` });
     }
