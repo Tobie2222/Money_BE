@@ -11,7 +11,8 @@ const User = {
   password_reset_token: 'password_reset_token',
   password_reset_expiration: 'password_reset_expiration',
   created_at: 'created_at',
-  updated_at: 'updated_at'
+  updated_at: 'updated_at',
+  slug_user: 'slug_user' // Thêm trường mới
 };
 
 module.exports = User;
