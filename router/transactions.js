@@ -4,42 +4,42 @@ const { verifyUser } = require("../middleware/verifyToken");
 const transactionsController = require("../controller/transactionsController");
 
 // [Create Expense Transaction] - User specific
-Router.post('/transactions/expense/:accountId/:userId/:categoryId', verifyUser, transactionsController.createExpenseTransactions);
+Router.post('/createExpenseTrans/:accountId/:userId/:categoryId', verifyUser, transactionsController.createExpenseTransactions);
 
 // [Create Income Transaction] - User specific
-Router.post('/transactions/income/:accountId/:userId/:incomeTypeId', verifyUser, transactionsController.createIncomeTransactions);
+Router.post('/createIncomeTrans/:accountId/:userId/:incomeTypeId', verifyUser, transactionsController.createIncomeTransactions);
 
 // [Get All Income Transactions] - User specific
-Router.get('/transactions/income/:userId', verifyUser, transactionsController.getAllTranIncome);
+Router.get('/allTranIncome/:userId', verifyUser, transactionsController.getAllTranIncome);
 
 // [Get All Expense Transactions] - User specific
-Router.get('/transactions/expense/:userId', verifyUser, transactionsController.getAllTranExpense);
+Router.get('/allTranExpense/:userId', verifyUser, transactionsController.getAllTranExpense);
 
 // [Delete Transaction] - User specific
-Router.delete('/transactions/:tranId/:userId', verifyUser, transactionsController.deleteTransaction);
+Router.delete('/deleteTran/:tranId/:userId', verifyUser, transactionsController.deleteTransaction);
 
 // [Update Transaction] - User specific
-Router.put('/transactions/:tranId/:userId/:type', verifyUser, transactionsController.updateTransaction);
+Router.put('/updateTransactions/:tranId/:userId/:type', verifyUser, transactionsController.updateTransaction);
 
 // [Get Transaction Details] - User specific
-Router.get('/transactions/:tranId/:userId', verifyUser, transactionsController.getDetailTransactions);
+Router.get('/getDetailTran/:tranId/:userId', verifyUser, transactionsController.getDetailTransactions);
 
 // [Get All Recent Transactions] - User specific
-Router.get('/transactions/recent/:userId', verifyUser, transactionsController.getRecentTranByUser);
+Router.get('/getAllTranRecent/:userId', verifyUser, transactionsController.getRecentTranByUser);
 
 // [Get Average Transactions in Month] - User specific
-Router.get('/transactions/average/month/:userId/:slug_user', verifyUser, transactionsController.getAvgTranInMonth);
+Router.get('/getAvgTranInMonth/:userId/:slug_user', verifyUser, transactionsController.getAvgTranInMonth);
 
 // [Get Monthly Sum of Transactions] - User specific
-Router.get('/transactions/sum/month/:userId/:slug_user', verifyUser, transactionsController.getMonthlySumTran);
+Router.get('/getSumTranByMonth/:userId/:slug_user', verifyUser, transactionsController.getMonthlySumTran);
 
 // [Get Average Income and Expense per Month] - User specific
-Router.get('/transactions/average/monthly/:userId/:slug_user', verifyUser, transactionsController.getAverageIncomeAndExpensePerMonth);
+ Router.get('/getAvgTranByMonth/:userId/:slug_user', verifyUser, transactionsController.getAverageIncomeAndExpensePerMonth);
 
 // [Find Transactions by Keyword] - User specific
-Router.get('/transactions/search/:userId', verifyUser, transactionsController.findTransactions);
+Router.get('/findTran/:userId', verifyUser, transactionsController.findTransactions);
 
 // [Filter Transactions by Keyword] - User specific
-Router.get('/transactions/filter/:userId', verifyUser, transactionsController.filterTransactions);
+Router.get('/filterTran/:userId', verifyUser, transactionsController.filterTransactions);
 
 module.exports = Router;

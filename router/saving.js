@@ -4,18 +4,18 @@ const { verifyUser } = require("../middleware/verifyToken");
 const savingController = require("../controller/savingController");
 
 // [Create Saving] - User specific
-Router.post('/savings/:userId', verifyUser, savingController.createSaving);
+Router.post('/createSaving/:userId', verifyUser, savingController.createSaving);
 // [Get All Savings by User] - User specific
-Router.get('/savings/:userId', verifyUser, savingController.getAllSavingByUser);
+Router.get('/getAllSaving/:userId', verifyUser, savingController.getAllSavingByUser);
 // [Get Saving Details] - User specific
-Router.get('/savings/:savingId/details/:userId', verifyUser, savingController.getSavingDetails);
+Router.get('/getDetailSaving/:savingId/:userId', verifyUser, savingController.getSavingDetails);
 // [Update Saving] - User specific
-Router.put('/savings/:savingId/:userId', verifyUser, savingController.updateSaving);
+Router.put('/updateSaving/:savingId/:userId', verifyUser, savingController.updateSaving);
 // [Delete Saving] - User specific
-Router.delete('/savings/:savingId/:userId', verifyUser, savingController.deleteSaving);
+Router.delete('/deleteSaving/:savingId/:userId', verifyUser, savingController.deleteSaving);
 // [Deposit Money to Saving] - User specific
-Router.post('/savings/:savingId/deposit/:accountId/:userId', verifyUser, savingController.depositMoneySaving);
+Router.post('/depositMoney/:savingId/:accountId/:userId', verifyUser, savingController.depositMoneySaving);
 // [Get All Deposits for Savings] - User specific
-Router.get('/savings/:userId/deposits', verifyUser, savingController.getAllDepositMoneySaving);
+Router.get('/getAllDeposits/:userId', verifyUser, savingController.getAllDepositMoneySaving);
 
 module.exports = Router;

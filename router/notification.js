@@ -4,15 +4,15 @@ const { verifyUser, verifyAdmin } = require("../middleware/verifyToken");
 const notificationController = require("../controller/notificationController");
 
 // [Create Notification] - Admin only
-Router.post('/notifications/:userId', verifyAdmin, notificationController.createNotification);
+Router.post('/createNotification/:userId', verifyAdmin, notificationController.createNotification);
 
 // [Get All Notifications for User] - User specific
-Router.get('/notifications/:userId', verifyUser, notificationController.getNotification);
+Router.get('/getNotification/:userId', verifyUser, notificationController.getNotification);
 
 // [Delete Notification] - User specific
-Router.delete('/notifications/:notificationId/:userId', verifyUser, notificationController.deleteNotification);
+Router.delete('/deleteNotification/:notificationId/:userId', verifyUser, notificationController.deleteNotification);
 
 // [Tick Notification as Read] - User specific
-Router.put('/notifications/tick/:userNotificationId/:userId', verifyUser, notificationController.markNotification);
+Router.put('/tick/:userNotificationId/:userId', verifyUser, notificationController.markNotification);
 
 module.exports = Router;

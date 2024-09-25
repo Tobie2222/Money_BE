@@ -4,18 +4,18 @@ const { verifyUser, verifyAdmin } = require("../middleware/verifyToken");
 const categoriesController = require("../controller/categoriesController");
 
 // [Create Category - Global] - Admin only
-Router.post('/categories/global', verifyAdmin, categoriesController.createCatGlobal);
+Router.post('/createCat', verifyAdmin, categoriesController.createCatGlobal);
 
 // [Create Category by User] - User specific
-Router.post('/categories/user/:userId', verifyUser, categoriesController.createCategoriesByUser);
+Router.post('/createCatByUser/:userId', verifyUser, categoriesController.createCategoriesByUser);
 
 // [Get All Categories by User] - User specific
-Router.get('/categories/:userId', verifyUser, categoriesController.getAllCategories);
+Router.get('/getAllCat/:userId', verifyUser, categoriesController.getAllCategories);
 
 // [Update Category] - User specific
-Router.put('/categories/:catId/:userId', verifyUser, categoriesController.updateCategories);
+Router.put('/updateCat/:catId/:userId', verifyUser, categoriesController.updateCategories);
 
 // [Delete Category] - User specific
-Router.delete('/categories/:catId/:userId', verifyUser, categoriesController.deleteCategories);
+Router.delete('/deleteCat/:catId/:userId', verifyUser, categoriesController.deleteCategories);
 
 module.exports = Router;
