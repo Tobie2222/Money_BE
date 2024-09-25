@@ -130,16 +130,13 @@ class AuthController {
             if (!user) {
                 return res.status(404).json({ message: 'Tài khoản không tồn tại' });
             }
-
             const verificationCode = Math.floor(1000 + Math.random() * 9000);
             const expirationTime = 10 * 60 * 1000; // 10 minutes
             const expirationDate = new Date(Date.now() + expirationTime);
-
             await user.update({
                 password_reset_token: verificationCode,
                 password_reset_expiration: expirationDate
             });
-
             await transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: email,
@@ -147,9 +144,7 @@ class AuthController {
                 text: `Mã xác thực của bạn là ${verificationCode}`,
                 html: `<p>Mã xác thực của bạn là <strong>${verificationCode}</strong></p>`
             });
-
             res.status(200).json({ message: 'Mã xác thực đã được gửi đến email của bạn.', expirationDate });
-
         } catch (err) {
             console.error('Lỗi khi gửi email:', err);
             res.status(500).json({ message: `Không thể gửi email: ${err.message}` });
