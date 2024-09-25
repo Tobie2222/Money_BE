@@ -1,6 +1,7 @@
-const db = require('../config/database'); // Cấu hình kết nối database
-const Joi = require('joi');
+const Category = require('../models/categoriesModel');
+const Transaction = require("../models/transactionsModel")
 const path = require('path');
+const Joi = require('joi');
 
 // Định nghĩa schema cho validation
 const schema = Joi.object({
@@ -19,25 +20,38 @@ class CategoriesController {
         }
         try {
             const { categories_name } = req.body;
-            const [check] = await db.execute('SELECT * FROM categories WHERE categories_name = ?', [categories_name]);
-            if (check.length > 0) {
+            const existingCategory = await Category.findOne({ where: { category_name: categories_name, is_global: true } });
+            if (existingCategory) {
                 return res.status(403).json({
-                    message: 'Danh mục đã tồn tại'
+                    message: "Danh mục chi tiêu đã tồn tại"
                 });
             }
+
+            if (!req.file) {
+                return res.status(400).json({
+                    message: "Image is required"
+                });
+            }
+
             const allowedTypes = ['image/jpeg', 'image/png'];
-            if (req.file && !allowedTypes.includes(req.file.mimetype)) {
+            if (!allowedTypes.includes(req.file.mimetype)) {
                 return res.status(400).json({
                     message: "Invalid image format. Only JPEG and PNG are allowed."
                 });
             }
-            const imagePath = req.file ? req.file.path : null;
-            await db.execute(
-                'INSERT INTO categories (categories_name, categories_image, is_global, user_id) VALUES (?, ?, ?, ?)',
-                [categories_name, imagePath, 1, null]
-            );
+
+            const imagePath = req.file.path;
+
+            const newCat = await Category.create({
+                category_name: categories_name,
+                category_image: imagePath,
+                is_global: true,
+                user_id: null
+            });
+
             return res.status(201).json({
-                message: "Danh mục toàn cầu đã được tạo thành công"
+                message: "Danh mục toàn cầu đã được tạo thành công",
+                newCat
             });
         } catch (err) {
             return res.status(500).json({
@@ -47,7 +61,7 @@ class CategoriesController {
     }
 
     // Tạo danh mục cá nhân
-    async createCatUser(req, res) {
+    async createCategoriesByUser(req, res) {
         const { userId } = req.params;
         const { error } = schema.validate(req.body);
         if (error) {
@@ -57,32 +71,42 @@ class CategoriesController {
         }
         try {
             const { categories_name } = req.body;
-            const [existingCategory] = await db.execute(
-                'SELECT * FROM categories WHERE categories_name = ? AND user_id = ?',
-                [categories_name, userId]
-            );
-            if (existingCategory.length > 0) {
+            const existingCategory = await Category.findOne({ where: { category_name: categories_name, user_id: userId } });
+            if (existingCategory) {
                 return res.status(403).json({
-                    message: "Danh mục đã tồn tại"
+                    message: "Danh mục chi tiêu đã tồn tại!"
                 });
             }
+
+            if (!req.file) {
+                return res.status(400).json({
+                    message: "Image is required"
+                });
+            }
+
             const allowedTypes = ['image/jpeg', 'image/png'];
-            if (req.file && !allowedTypes.includes(req.file.mimetype)) {
+            if (!allowedTypes.includes(req.file.mimetype)) {
                 return res.status(400).json({
                     message: "Invalid image format. Only JPEG and PNG are allowed."
                 });
             }
-            const imagePath = req.file ? req.file.path : null;
-            await db.execute(
-                'INSERT INTO categories (categories_name, categories_image, is_global, user_id) VALUES (?, ?, ?, ?)',
-                [categories_name, imagePath, 0, userId]
-            );
+
+            const imagePath = req.file.path;
+
+            const newCat = await Category.create({
+                category_name: categories_name,
+                category_image: imagePath,
+                is_global: false,
+                user_id: userId
+            });
+
             return res.status(201).json({
-                message: "Danh mục cá nhân đã được tạo thành công"
+                message: "Tạo mới danh mục chi tiêu thành công",
+                newCat
             });
         } catch (err) {
             return res.status(500).json({
-                message: `Lỗi khi tạo danh mục cá nhân: ${err.message}`
+                message: `Lỗi khi tạo danh mục chi tiêu: ${err.message}`
             });
         }
     }
@@ -91,10 +115,15 @@ class CategoriesController {
     async getAllCategories(req, res) {
         try {
             const { userId } = req.params;
-            const [allCategories] = await db.execute(
-                'SELECT * FROM categories WHERE user_id = ? OR is_global = 1',
-                [userId]
-            );
+            const allCategories = await Category.findAll({
+                where: {
+                    [Op.or]: [
+                        { user_id: userId },
+                        { is_global: true }
+                    ]
+                }
+            });
+
             return res.status(200).json({
                 message: "Danh mục đã được lấy thành công",
                 categories: allCategories
@@ -116,22 +145,20 @@ class CategoriesController {
             });
         }
         try {
-            const [category] = await db.execute('SELECT * FROM categories WHERE category_id = ?', [catId]);
-            if (category.length === 0) {
+            const category = await Category.findByPk(catId);
+            if (!category) {
                 return res.status(404).json({
                     message: "Danh mục không tồn tại"
                 });
             }
-            if (category[0].is_global) {
+            if (category.is_global) {
                 return res.status(403).json({
                     message: "Không thể cập nhật danh mục toàn cầu"
                 });
             }
-            const { categories_name, categories_image } = req.body;
-            await db.execute(
-                'UPDATE categories SET categories_name = ?, categories_image = ? WHERE category_id = ?',
-                [categories_name || category[0].categories_name, categories_image || category[0].categories_image, catId]
-            );
+
+            await Category.update(req.body, { where: { id: catId } });
+
             return res.status(200).json({
                 message: "Danh mục đã được cập nhật thành công"
             });
@@ -144,36 +171,35 @@ class CategoriesController {
 
     // Xóa danh mục
     async deleteCategories(req, res) {
-        const connection = await db.getConnection();
+        const { catId, userId } = req.params;
+        const transaction = await db.transaction();
         try {
-            const { catId, userId } = req.params;
-            await connection.beginTransaction();
-            const [category] = await connection.execute('SELECT * FROM categories WHERE category_id = ?', [catId]);
-            if (category.length === 0) {
-                await connection.rollback();
+            const category = await Category.findByPk(catId);
+            if (!category) {
+                await transaction.rollback();
                 return res.status(404).json({
                     message: "Danh mục không tồn tại"
                 });
             }
-            if (category[0].is_global || category[0].user_id !== userId) {
-                await connection.rollback();
+            if (category.is_global || category.user_id !== parseInt(userId, 10)) {
+                await transaction.rollback();
                 return res.status(403).json({
-                    message: "Không thể xóa danh mục"
+                    message: "Không thể xóa danh mục này"
                 });
             }
-            await connection.execute('DELETE FROM categories WHERE category_id = ?', [catId]);
-            await connection.execute('UPDATE transactions SET category_id = NULL WHERE category_id = ?', [catId]);
-            await connection.commit();
+
+            await Category.destroy({ where: { id: catId }, transaction });
+            await Transaction.update({ category_id: null }, { where: { category_id: catId }, transaction });
+
+            await transaction.commit();
             return res.status(200).json({
                 message: "Danh mục đã được xóa thành công"
             });
         } catch (err) {
-            await connection.rollback();
+            await transaction.rollback();
             return res.status(500).json({
                 message: `Lỗi khi xóa danh mục: ${err.message}`
             });
-        } finally {
-            connection.release();
         }
     }
 }

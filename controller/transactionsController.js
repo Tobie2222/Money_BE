@@ -1,248 +1,479 @@
-const connection = require('../config/database'); // Ensure the correct path to the config file
-const { Transaction } = require('../model/transactionsModel'); // Import the Transaction model
-const { Account } = require('../model/accountsModel'); // Import the Account model
-const { User } = require('../model/userModel'); // Import the User model
+const Transactions= require("../models/transactionsModel"); 
+const Accounts = require("../models/accountsModel"); 
+const Users = require("../models/userModel"); 
+const Categories = require("../models/categoriesModel"); 
+const IncomeTypes = require("../models/incomeTypeModel"); 
+const { Op } = require("sequelize"); 
 
 class TransactionsController {
-  
-  // Helper method to get account by ID
-  async getAccountById(accountId) {
-    return new Promise((resolve, reject) => {
-      connection.query('SELECT * FROM accounts WHERE id = ?', [accountId], (err, results) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(results[0]);
-      });
-    });
-  }
+    //[create tran expense]
+    async createExpenseTransactions(req, res) {
+        try {
+            const { accountId, userId, categoryId } = req.params;
+            const { transaction_name, desc_transaction, amount, transaction_date } = req.body;
 
-  // Helper method to update account balance
-  async updateAccountBalance(accountId, amount, isDebit) {
-    const operation = isDebit ? 'balance - ?' : 'balance + ?';
-    return new Promise((resolve, reject) => {
-      connection.query(`UPDATE accounts SET balance = ${operation} WHERE id = ?`, [amount, accountId], (err) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve();
-      });
-    });
-  }
+            const findAccount = await Accounts.findByPk(accountId);
+            const findUser = await Users.findByPk(userId);
 
-  // [Create Expense Transaction]
-  async createExpenseTransactions(req, res) {
-    const { accountId, userId, categoryId } = req.params;
-    const { transaction_name, desc_transaction, amount, transaction_date } = req.body;
-
-    // Validate input
-    if (isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ message: "Invalid amount" });
-    }
-
-    try {
-      const findAccount = await this.getAccountById(accountId);
-      if (!findAccount) {
-        return res.status(404).json({ message: "Account not found" });
-      }
-
-      if (findAccount.balance < amount) {
-        return res.status(403).json({ message: "Insufficient balance" });
-      }
-
-      await this.updateAccountBalance(accountId, amount, true);
-
-      const query = 'INSERT INTO transactions (transaction_name, desc_transaction, is_fixed, amount, type, transaction_date, user_id, account_id, category_id, income_type, slug_user) VALUES (?, ?, false, ?, "expense", ?, ?, ?, ?, NULL, ?)';
-      connection.query(query, [transaction_name, desc_transaction, amount, new Date(transaction_date), userId, accountId, categoryId, findAccount.slug_user], (err, result) => {
-        if (err) {
-          return res.status(500).json({ message: `Error: ${err.message}` });
-        }
-
-        connection.query('UPDATE accounts SET transactions = JSON_ARRAY_APPEND(transactions, "$", ?) WHERE id = ?', [result.insertId, accountId], (err) => {
-          if (err) {
-            return res.status(500).json({ message: `Error: ${err.message}` });
-          }
-
-          return res.status(200).json({
-            message: "Expense transaction created successfully",
-            newExpenseTrans: { id: result.insertId, transaction_name, desc_transaction, amount, transaction_date, user_id: userId, account_id: accountId, category_id: categoryId }
-          });
-        });
-      });
-
-    } catch (err) {
-      return res.status(500).json({ message: `Error: ${err.message}` });
-    }
-  }
-
-  // [Create Income Transaction]
-  async createIncomeTransactions(req, res) {
-    const { accountId, incomeTypeId, userId } = req.params;
-    const { transaction_name, desc_transaction, amount, transaction_date } = req.body;
-
-    // Validate input
-    if (isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ message: "Invalid amount" });
-    }
-
-    try {
-      const findAccount = await this.getAccountById(accountId);
-      if (!findAccount) {
-        return res.status(404).json({ message: "Account not found" });
-      }
-
-      await this.updateAccountBalance(accountId, amount, false);
-
-      const query = 'INSERT INTO transactions (transaction_name, desc_transaction, is_fixed, amount, type, transaction_date, user_id, account_id, category_id, income_type, slug_user) VALUES (?, ?, false, ?, "income", ?, ?, ?, ?, ?, ?)';
-      connection.query(query, [transaction_name, desc_transaction, amount, new Date(transaction_date), userId, accountId, null, incomeTypeId, findAccount.slug_user], (err, result) => {
-        if (err) {
-          return res.status(500).json({ message: `Error: ${err.message}` });
-        }
-
-        connection.query('UPDATE accounts SET transactions = JSON_ARRAY_APPEND(transactions, "$", ?) WHERE id = ?', [result.insertId, accountId], (err) => {
-          if (err) {
-            return res.status(500).json({ message: `Error: ${err.message}` });
-          }
-
-          return res.status(200).json({
-            message: "Income transaction created successfully",
-            newTranIncome: { id: result.insertId, transaction_name, desc_transaction, amount, transaction_date, user_id: userId, account_id: accountId, income_type: incomeTypeId }
-          });
-        });
-      });
-
-    } catch (err) {
-      return res.status(500).json({ message: `Error: ${err.message}` });
-    }
-  }
-
-  // Get recent transactions by user
-  async getRecentTranByUser(req, res) {
-    const { userId } = req.params;
-    const twoDaysAgo = new Date();
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-
-    try {
-      connection.query(`SELECT * FROM transactions WHERE user_id = ? AND type = "income" AND transaction_date >= ? ORDER BY transaction_date DESC LIMIT 5`, [userId, twoDaysAgo], (err, recentIncomeTransactions) => {
-        if (err) {
-          return res.status(500).json({ message: `Error: ${err.message}` });
-        }
-
-        connection.query(`SELECT * FROM transactions WHERE user_id = ? AND type = "expense" AND transaction_date >= ? ORDER BY transaction_date DESC LIMIT 5`, [userId, twoDaysAgo], (err, recentExpenseTransactions) => {
-          if (err) {
-            return res.status(500).json({ message: `Error: ${err.message}` });
-          }
-
-          return res.status(200).json({
-            message: "success",
-            allTranRecent: {
-              tranIncome: recentIncomeTransactions,
-              tranExpense: recentExpenseTransactions
-            }
-          });
-        });
-      });
-
-    } catch (err) {
-      return res.status(500).json({ message: `Error: ${err.message}` });
-    }
-  }
-
-  // Get all income transactions by user
-  async getAllTranIncome(req, res) {
-    const { userId } = req.params;
-
-    try {
-      connection.query(`SELECT * FROM transactions WHERE user_id = ? AND type = "income"`, [userId], (err, findTran) => {
-        if (err) {
-          return res.status(500).json({ message: `Error: ${err.message}` });
-        }
-
-        return res.status(200).json({
-          message: "success",
-          findTran
-        });
-      });
-
-    } catch (err) {
-      return res.status(500).json({ message: `Error: ${err.message}` });
-    }
-  }
-
-  // Get all expense transactions by user
-  async getAllTranExpense(req, res) {
-    const { userId } = req.params;
-
-    try {
-      connection.query(`SELECT * FROM transactions WHERE user_id = ? AND type = "expense"`, [userId], (err, findTran) => {
-        if (err) {
-          return res.status(500).json({ message: `Error: ${err.message}` });
-        }
-
-        return res.status(200).json({
-          message: "success",
-          findTran
-        });
-      });
-
-    } catch (err) {
-      return res.status(500).json({ message: `Error: ${err.message}` });
-    }
-  }
-
-  // Delete transaction
-  async deleteTran(req, res) {
-    const { tranId } = req.params;
-
-    try {
-      connection.query('SELECT * FROM transactions WHERE id = ?', [tranId], (err, transactions) => {
-        if (err) {
-          return res.status(500).json({ message: `Error: ${err.message}` });
-        }
-
-        const transaction = transactions[0];
-        if (!transaction) {
-          return res.status(404).json({ message: "Transaction not found" });
-        }
-
-        connection.beginTransaction(err => {
-          if (err) {
-            return res.status(500).json({ message: `Error: ${err.message}` });
-          }
-
-          connection.query('UPDATE accounts SET transactions = JSON_REMOVE(transactions, JSON_UNQUOTE(JSON_SEARCH(transactions, "one", ?))) WHERE id = ?', [tranId, transaction.account_id], (err) => {
-            if (err) {
-              return connection.rollback(() => {
-                res.status(500).json({ message: `Error: ${err.message}` });
-              });
+            if (!findAccount) {
+                return res.status(404).json({ message: "Tài khoản không tìm thấy" });
             }
 
-            connection.query('DELETE FROM transactions WHERE id = ?', [tranId], (err) => {
-              if (err) {
-                return connection.rollback(() => {
-                  res.status(500).json({ message: `Error: ${err.message}` });
-                });
-              }
+            if (findAccount.balance < amount) {
+                return res.status(403).json({ message: "Ví của bạn không đủ để trả!" });
+            }
 
-              connection.commit(err => {
-                if (err) {
-                  return connection.rollback(() => {
-                    res.status(500).json({ message: `Error: ${err.message}` });
-                  });
-                }
+            findAccount.balance -= amount;
+            await findAccount.save();
 
-                return res.status(200).json({
-                  message: "Transaction deleted successfully"
-                });
-              });
+            const newExpenseTrans = await Transactions.create({
+                transaction_name,
+                desc_transaction,
+                is_fixed: false,
+                amount,
+                type: "expense",
+                transaction_date: new Date(transaction_date),
+                userId: userId,
+                accountId: accountId,
+                categoryId: categoryId,
+                incomeTypeId: null,
+                slug_user: findUser.slug_user
             });
-          });
-        });
-      });
-    } catch (err) {
-      return res.status(500).json({ message: `Error: ${err.message}` });
+
+            return res.status(200).json({
+                message: "Tạo mới khoản chi thành công",
+                newExpenseTrans
+            });
+        } catch (err) {
+            return res.status(500).json({ message: `Lỗi ${err.message}` });
+        }
     }
-  }
+
+    //[create tran income]
+    async createIncomeTransactions(req, res) {
+        try {
+            const { accountId, incomeTypeId, userId } = req.params;
+            const { transaction_name, desc_transaction, amount, transaction_date } = req.body;
+
+            const findAccount = await Accounts.findByPk(accountId);
+            const findUser = await Users.findByPk(userId);
+
+            if (!findAccount) {
+                return res.status(404).json({ message: "Tài khoản không tìm thấy" });
+            }
+
+            findAccount.balance += amount;
+            await findAccount.save();
+
+            const newIncomeTrans = await Transactions.create({
+                transaction_name,
+                desc_transaction,
+                is_fixed: false,
+                amount,
+                type: "income",
+                transaction_date: new Date(transaction_date),
+                userId: userId,
+                accountId: accountId,
+                incomeTypeId: incomeTypeId,
+                categoryId: null,
+                slug_user: findUser.slug_user
+            });
+
+            return res.status(200).json({
+                message: "Tạo mới khoản thu thành công",
+                newIncomeTrans
+            });
+        } catch (err) {
+            return res.status(500).json({ message: `Lỗi ${err.message}` });
+        }
+    }
+
+    // Get recent transactions by user
+    async getRecentTranByUser(req, res) {
+        try {
+            const { userId } = req.params;
+            const twoDaysAgo = new Date();
+            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+            const recentIncomeTransactions = await Transactions.findAll({
+                where: {
+                    userId: userId,
+                    type: "income",
+                    transaction_date: { [Op.gte]: twoDaysAgo }
+                },
+                include: [{ model: IncomeTypes, attributes: ["income_type_image"] }],
+                order: [["transaction_date", "DESC"]],
+                limit: 5
+            });
+
+            const recentExpenseTransactions = await Transactions.findAll({
+                where: {
+                    userId: userId,
+                    type: "expense",
+                    transaction_date: { [Op.gte]: twoDaysAgo }
+                },
+                include: [{ model: Categories, attributes: ["categories_image"] }],
+                order: [["transaction_date", "DESC"]],
+                limit: 5
+            });
+
+            return res.status(200).json({
+                message: "success",
+                allTranRecent: {
+                    tranIncome: recentIncomeTransactions,
+                    tranExpense: recentExpenseTransactions
+                }
+            });
+        } catch (err) {
+            return res.status(500).json({ message: `Lỗi ${err.message}` });
+        }
+    }
+
+    //getAll TranIncome
+    async getAllTranIncome(req, res) {
+        try {
+            const { userId } = req.params;
+            const findTran = await Transactions.findAll({
+                where: {
+                    userId: userId,
+                    type: "income"
+                },
+                include: [
+                    {
+                        model: IncomeTypes,
+                        attributes: ['income_type_image']
+                    }
+                ]
+            });
+            return res.status(200).json({
+                message: "success",
+                findTran
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi ${err.message}`
+            });
+        }
+    }
+    //getAll TranExpense
+async getAllTranExpense(req, res) {
+    try {
+        const { userId } = req.params;
+        const findTran = await Transactions.findAll({
+            where: {
+                userId: userId,
+                type: "expense"
+            },
+            include: [
+                {
+                    model: Categories,
+                    attributes: ['categories_image']
+                }
+            ]
+        });
+        return res.status(200).json({
+            message: "success",
+            findTran
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: `Lỗi ${err.message}`
+        });
+    }
+}
+
+    //[delete tran]
+    async deleteTransaction(req, res) {
+        try {
+            const { transactionId } = req.params;
+
+            const findTransaction = await Transactions.findByPk(transactionId);
+
+            if (!findTransaction) {
+                return res.status(404).json({ message: "Giao dịch không tìm thấy" });
+            }
+
+            await findTransaction.destroy();
+
+            return res.status(200).json({
+                message: "Xóa giao dịch thành công"
+            });
+        } catch (err) {
+            return res.status(500).json({ message: `Lỗi ${err.message}` });
+        }
+    }
+
+    //[update tran]
+    async updateTransaction(req, res) {
+        try {
+            const { transactionId } = req.params;
+            const { transaction_name, desc_transaction, amount, transaction_date } = req.body;
+
+            const findTransaction = await Transactions.findByPk(transactionId);
+
+            if (!findTransaction) {
+                return res.status(404).json({ message: "Giao dịch không tìm thấy" });
+            }
+
+            findTransaction.transaction_name = transaction_name || findTransaction.transaction_name;
+            findTransaction.desc_transaction = desc_transaction || findTransaction.desc_transaction;
+            findTransaction.amount = amount || findTransaction.amount;
+            findTransaction.transaction_date = transaction_date || findTransaction.transaction_date;
+
+            await findTransaction.save();
+
+            return res.status(200).json({
+                message: "Cập nhật giao dịch thành công",
+                findTransaction
+            });
+        } catch (err) {
+            return res.status(500).json({ message: `Lỗi ${err.message}` });
+        }
+    }
+    // get Detail Transactions
+    async getDetailTransactions(req, res) {
+        try {
+            const { tranId } = req.params;
+            const findTran = await Transactions.findByPk(tranId);
+            return res.status(200).json({
+                message: "success",
+                findTran
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi ${err.message}`
+            });
+        }
+    }
+    // get Avg balance in month
+    async getAvgTranInMonth(req, res) {
+        try {
+            const { slug_user } = req.params;
+            const { month, year } = req.query;
+
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+            // Tính tổng thu nhập và chi tiêu cho tháng hiện tại
+            const totals = await Transactions.findAll({
+                where: {
+                    userId: slug_user,
+                    transaction_date: {
+                        [Op.between]: [startDate, endDate],
+                    },
+                },
+                attributes: [
+                    'type',
+                    [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalAmount']
+                ],
+                group: ['type']
+            });
+
+            // Tính tổng số ngày trong tháng hiện tại
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const totalExpenseThisMonth = totals.find(item => item.type === "expense")?.get('totalAmount') || 0;
+            const totalIncomeThisMonth = totals.find(item => item.type === "income")?.get('totalAmount') || 0;
+            const avgExpenseThisMonth = totalExpenseThisMonth / daysInMonth;
+            const avgIncomeThisMonth = totalIncomeThisMonth / daysInMonth;
+
+            return res.status(200).json({
+                message: "success",
+                data: {
+                    thisMonth: {
+                        totalExpense: totalExpenseThisMonth,
+                        totalIncome: totalIncomeThisMonth,
+                        avgExpensePerDay: avgExpenseThisMonth,
+                        avgIncomePerDay: avgIncomeThisMonth
+                    }
+                }
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: `Error: ${err.message}`
+            });
+        }
+    }
+    // get Monthly Sum Transactions
+    async getMonthlySumTran(req, res) {
+        const { slug_user } = req.params;
+        const { year } = req.query;
+        if (!year || isNaN(year)) {
+            return res.status(400).json({ message: "Năm không hợp lệ" });
+        }
+        try {
+            const transactions = await Transactions.findAll({
+                where: {
+                    userId: slug_user,
+                    transaction_date: {
+                        [Op.between]: [new Date(`${year}-01-01`), new Date(`${parseInt(year) + 1}-01-01`)],
+                    }
+                },
+                attributes: [
+                    [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'month'],
+                    'type',
+                    [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalAmount']
+                ],
+                group: [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'type'],
+                order: [Sequelize.fn('MONTH', Sequelize.col('transaction_date'))]
+            });
+
+            const monthlyAverages = Array.from({ length: 12 }, (_, i) => ({
+                month: i + 1,
+                income: 0,
+                expense: 0,
+                net: 0
+            }));
+
+            transactions.forEach(month => {
+                const monthIndex = month.get('month') - 1;
+                if (month.type === 'income') {
+                    monthlyAverages[monthIndex].income = month.get('totalAmount');
+                } else {
+                    monthlyAverages[monthIndex].expense = month.get('totalAmount');
+                }
+                monthlyAverages[monthIndex].net = monthlyAverages[monthIndex].income - monthlyAverages[monthIndex].expense;
+            });
+
+            return res.status(200).json({
+                message: "Success",
+                monthlyAverages
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi: ${err.message}`
+            });
+        }
+    }
+    // get Average Income and Expense Per Month
+    async getAverageIncomeAndExpensePerMonth(req, res) {
+        const { slug_user } = req.params;
+        const { year } = req.query;
+        if (!year || isNaN(year)) {
+            return res.status(400).json({ message: "Năm không hợp lệ" });
+        }
+        try {
+            const results = await Transactions.findAll({
+                where: {
+                    userId: slug_user,
+                    transaction_date: {
+                        [Op.between]: [new Date(`${year}-01-01`), new Date(`${parseInt(year) + 1}-01-01`)],
+                    }
+                },
+                attributes: [
+                    [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'month'],
+                    'type',
+                    [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalAmount'],
+                    [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+                ],
+                group: [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'type'],
+                order: [Sequelize.fn('MONTH', Sequelize.col('transaction_date'))]
+            });
+
+            const monthlyAverages = Array.from({ length: 12 }, (_, i) => ({
+                month: i + 1,
+                averageIncome: 0,
+                averageExpense: 0
+            }));
+
+            results.forEach(monthData => {
+                const monthIndex = monthData.get('month') - 1;
+                const count = monthData.get('count');
+                if (monthData.type === 'income') {
+                    monthlyAverages[monthIndex].averageIncome = monthData.get('totalAmount') / count;
+                } else {
+                    monthlyAverages[monthIndex].averageExpense = monthData.get('totalAmount') / count;
+                }
+            });
+
+            return res.status(200).json({
+                message: "Success",
+                monthlyAverages
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi: ${err.message}`
+            });
+        }
+    }
+    // Find Transactions by keyword
+    async findTransactions(req, res) {
+        try {
+            const { keyword, type } = req.query;
+            const findTran = await Transactions.findAll({
+                where: {
+                    type: type,
+                    transaction_name: {
+                        [Op.like]: `%${keyword}%`
+                    }
+                },
+                include: [
+                    {
+                        model: Categories,
+                        attributes: ['categories_image']
+                    },
+                    {
+                        model: IncomeTypes,
+                        attributes: ['income_type_image']
+                    }
+                ]
+            });
+            return res.status(200).json({
+                message: "Tìm kiếm thành công",
+                findTran
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi ${err.message}`
+            });
+        }
+    }
+    // Filter Transactions by date and category
+    async filterTransactions(req, res) {
+        try {
+            const { date, categoryId, type } = req.query;
+            const filterConditions = {};
+
+            if (date) {
+                const selectedDate = new Date(date);
+                filterConditions.transaction_date = {
+                    [Op.between]: [selectedDate.setHours(0, 0, 0, 0), selectedDate.setHours(23, 59, 59, 999)]
+                };
+            }
+
+            if (categoryId) {
+                filterConditions.categoryId = categoryId;
+            }
+
+            if (!Object.keys(filterConditions).length) {
+                return res.status(403).json({
+                    message: "Không có kết quả tìm kiếm!",
+                });
+            }
+
+            const transactions = await Transactions.findAll({
+                where: { ...filterConditions, type: type },
+                include: [
+                    {
+                        model: Categories,
+                        attributes: ['categories_image']
+                    }
+                ]
+            });
+
+            return res.status(200).json({
+                message: "Tìm kiếm thành công",
+                transactions
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi ${err.message}`
+            });
+        }
+    }
+
+
+
+
 }
 
 module.exports = new TransactionsController();

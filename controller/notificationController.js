@@ -1,4 +1,7 @@
-const { Notification, UserNotification, User } = require('../models'); 
+const Notification = require('../models/notificationModel'); 
+const UserNotification = require('../models/userNotificationModel');
+const User = require('../models/userModel');
+
 class NotificationController {
     // Create notification
     async createNotification(req, res) {

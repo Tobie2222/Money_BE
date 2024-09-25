@@ -1,4 +1,8 @@
-const { Saving, Account, SavingsTransaction, Notification, UserNotification } = require('../models'); // Assuming models are in the same directory
+const SavingsTransaction = require('../models/savingTransactionModel');
+const Notification = require('../models/notificationModel'); 
+const UserNotification = require('../models/userNotificationModel');
+const Account = require('../models/accountsModel');
+const Saving = require("../models/savingModel")
 
 class SavingController {
     // Create saving

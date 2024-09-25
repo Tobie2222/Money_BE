@@ -1,4 +1,5 @@
-const { IncomeType, Transaction } = require('../models'); // Assuming your models are stored in a models folder
+const Transaction = require('../models/transactionsModel');
+const IncomeType = require('../models/incomeTypeModel');
 const Joi = require('joi');
 
 const schema = Joi.object({

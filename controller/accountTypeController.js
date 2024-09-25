@@ -1,4 +1,5 @@
-const { AccountType, Account } = require('../models');
+const Account = require('../models/accountsModel');
+const AccountType = require('../models/accountTypeModel');
 const Joi = require('joi');
 
 class AccountTypeController {
@@ -26,7 +27,7 @@ class AccountTypeController {
             // Create a new account type
             const newAccountType = await AccountType.create({
                 account_type_name,
-                account_type_image: req.file.path
+                account_type_image: account_type_image
             });
 
             return res.status(200).json({

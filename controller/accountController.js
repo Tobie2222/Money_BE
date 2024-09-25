@@ -1,8 +1,8 @@
-const Account = require('../models/Account');
-const AccountType = require('../models/AccountType');
-const Transaction = require('../models/Transaction');
-const IncomeType = require('../models/IncomeType');
-const Category = require('../models/Category');
+const Account = require('../models/accountsModel');
+const AccountType = require('../models/accountTypeModel');
+const Transaction = require('../models/transactionsModel');
+const IncomeType = require('../models/incomeTypeModel');
+const Category = require('../models/categoriesModel');
 const Joi = require('joi');
 
 class AccountController {

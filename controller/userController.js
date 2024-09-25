@@ -1,9 +1,9 @@
-const User = require("../model/userModel");
-const Account = require("../model/accountsModel");
-const Transaction = require("../model/transactionsModel");
-const Categories = require("../model/categoriesModel");
-const IncomeType = require("../model/incomeTypeModel");
-const Saving = require("../model/savingModel");
+const User = require("../models/userModel");
+const Account = require("../models/accountsModel");
+const Transaction = require("../models/transactionsModel");
+const Categories = require("../models/categoriesModel");
+const IncomeType = require("../models/incomeTypeModel");
+const Saving = require("../models/savingModel");
 const bcrypt = require("bcrypt");
 const slug = require('slug');
 
@@ -83,20 +83,15 @@ class UserController {
         try {
             const { userId } = req.params;
             const user = await User.findOne({ where: { user_id: userId } });
-
             if (!user) {
                 return res.status(404).json({ message: "Người dùng không tồn tại" });
             }
-
             const updatedData = {
                 avatar: req.file ? req.file.path : user.avatar,
                 ...req.body
             };
-
             await User.update(updatedData, { where: { user_id: userId } });
-
             const updatedUser = await User.findOne({ where: { user_id: userId } });
-
             return res.status(200).json({
                 message: "Cập nhật người dùng thành công",
                 user: updatedUser

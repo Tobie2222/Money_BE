@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const slug = require('slug');
 const nodemailer = require('nodemailer');
-const  User  = require('../model/userModel'); 
+const  User  = require('../models/userModel'); 
 require('dotenv').config();
 
 // Configure Nodemailer transporter
