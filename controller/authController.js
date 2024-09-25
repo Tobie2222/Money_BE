@@ -78,40 +78,53 @@ class AuthController {
                 email: Joi.string().email().required(),
                 password: Joi.string().required()
             });
-
+    
             const { error } = schema.validate(req.body);
             if (error) {
                 return res.status(400).json({ message: error.details[0].message });
             }
+    
             const { email, password } = req.body;
-
+    
             // Find user in database
-            const user = await User.findOne({ where: { email } });
+            const user = await User.findOne({
+                where: { email },
+                attributes: ['id', 'name', 'avatar', 'email', 'slug_user', 'password'] // Chỉ lấy password để so sánh
+            });
             if (!user) {
                 return res.status(400).json({ message: 'Email hoặc mật khẩu không đúng' });
             }
-
+    
             // Compare passwords
             const validPassword = await bcrypt.compare(password, user.password);
             if (!validPassword) {
                 return res.status(400).json({ message: 'Email hoặc mật khẩu không đúng' });
             }
-
+    
             // Create JWT token
             const token = jwt.sign({
                 userId: user.id,
-                isAdmin: user.isAdmin
+                isAdmin: user.isAdmin // Nếu bạn có trường isAdmin trong model User
             }, process.env.TOKEN_KEY, { expiresIn: '1h' });
-
+    
+            // Trả về token và thông tin người dùng (nếu cần)
             return res.status(200).json({
                 message: 'Đăng nhập thành công',
-                token
+                token,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    avatar: user.avatar,
+                    email: user.email,
+                    slug_user: user.slug_user
+                }
             });
-
+    
         } catch (err) {
             return res.status(500).json({ message: `Lỗi: ${err.message || err}` });
         }
     }
+    
 
     // Forgot password
     async forgotPassword(req, res) {
