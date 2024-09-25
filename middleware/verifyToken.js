@@ -4,6 +4,8 @@ dotenv.config();
 
   const verifyToken = (req,res,next) => {
     const tokenHeader = req.headers.token;
+    console.log(tokenHeader);
+    
     if(!tokenHeader){
         return res.status(401).json({
             message: "Access denied. No token provided."
@@ -11,6 +13,7 @@ dotenv.config();
     };
     
     const token = tokenHeader.split(" ")[1];
+    
     jwt.verify(token,process.env.TOKEN_KEY, (err,user) => {
         if (err) return res.status(403).json({ message: "Token is invalid." });
         req.user = user;

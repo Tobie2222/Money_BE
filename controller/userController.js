@@ -63,7 +63,7 @@ class UserController {
             const { count, rows } = await User.findAndCountAll({
                 offset,
                 limit,
-                order: [['createdAt', 'DESC']]
+                order: [['created_at', 'DESC']]
             });
 
             return res.status(200).json({

@@ -144,7 +144,7 @@ class AuthController {
                 text: `Mã xác thực của bạn là ${verificationCode}`,
                 html: `<p>Mã xác thực của bạn là <strong>${verificationCode}</strong></p>`
             });
-            res.status(200).json({ message: 'Mã xác thực đã được gửi đến email của bạn.', expirationDate });
+            res.status(200).json({ message: 'Mã xác thực đã được gửi đến email của bạn.', expirationDate,email });
         } catch (err) {
             console.error('Lỗi khi gửi email:', err);
             res.status(500).json({ message: `Không thể gửi email: ${err.message}` });

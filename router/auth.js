@@ -11,15 +11,11 @@ Router.post('/register',AuthController.register);
 Router.post('/login',AuthController.login);
 //send mail
 Router.post('/send-mail',AuthController.forgotPassword);
-
 //verify code
 Router.post('/verify-code',AuthController.verifyCode);
-
 //reset password
 Router.post('/reset-password',AuthController.resetPassword);
-
 //change password
 Router.post('/changePassword',AuthController.changePassword);
-
 module.exports = Router;
 
