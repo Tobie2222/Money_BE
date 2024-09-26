@@ -23,7 +23,8 @@ dotenv.config();
 
  const verifyUser = (req,res,next) => {
     verifyToken(req,res,() => {
-        if (req.user && req.user.id === parseInt(req.params.userId)) {
+        console.log(req.user);
+        if (req.user && req.user.userId === parseInt(req.params.userId)) {
             next();
         } else {
             return res.status(403).json({message: "You are not allowed to do that!"})

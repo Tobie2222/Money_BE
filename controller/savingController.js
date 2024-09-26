@@ -8,9 +8,9 @@ class SavingController {
     // Create saving
     async createSaving(req, res) {
         try {
+            console.log(req.body)
             const { userId } = req.params;
             const { saving_name, desc_saving, goal_amount, deadline, saving_date } = req.body;
-
             const today = new Date();
             const deadL = new Date(deadline);
 
@@ -28,7 +28,7 @@ class SavingController {
                 saving_image: req.file ? req.file.path : null
             });
 
-            return res.status(201).json({ message: "Tạo mới khoản tiết kiệm thành công", saving });
+            return res.status(200).json({ message: "Tạo mới khoản tiết kiệm thành công", saving });
         } catch (err) {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
