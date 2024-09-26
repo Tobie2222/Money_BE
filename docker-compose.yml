@@ -1,0 +1,31 @@
+version: '4'
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DB_HOST: mysqldb
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_DATABASE: Money
+    ports:
+      - 3000:3000
+    depends_on:
+      - mysqldb
+ 
+  mysqldb:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Money
+    ports:
+      - 2004:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./Money.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+ 
+volumes:
+  mysql-data:
