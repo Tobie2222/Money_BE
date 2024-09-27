@@ -8,35 +8,18 @@ const SavingsTransaction = db.define('SavingsTransaction', {
     primaryKey: true,
     autoIncrement: true,
   },
-  transaction_name: {
+  name_tran: {
     type: DataTypes.STRING,
-    allowNull: false,
-  },
-  desc_transaction: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  slug_user: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  is_fixed: {
-    type: DataTypes.BOOLEAN,
     allowNull: false,
   },
   amount: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-  type: {
-    type: DataTypes.STRING,
+    type: DataTypes.DOUBLE,
     allowNull: false,
   },
   transaction_date: {
     type: DataTypes.DATE,
     allowNull: false,
   },
-
   user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

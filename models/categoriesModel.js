@@ -22,7 +22,6 @@ const Category = db.define('Category', {
     type: DataTypes.STRING,
     allowNull: false,
   },
- 
   user_id: {
     type: DataTypes.INTEGER,
     allowNull: true, 

@@ -15,10 +15,6 @@ const Transaction = db.define('Transaction', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  slug_user: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
   is_fixed: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -27,7 +23,7 @@ const Transaction = db.define('Transaction', {
     type: DataTypes.FLOAT, 
     allowNull: false,
   },
-  type: {
+  transactions_type: {
     type: DataTypes.STRING,
     allowNull: false,
   },

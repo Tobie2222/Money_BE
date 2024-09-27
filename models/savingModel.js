@@ -37,7 +37,6 @@ const Saving = db.define('Saving', {
     allowNull: false,
     defaultValue: "https://cdn.pixabay.com/photo/2021/04/16/10/19/piggy-bank-6183186_960_720.png",
   },
-
   user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
