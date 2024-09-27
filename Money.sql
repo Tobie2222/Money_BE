@@ -315,7 +315,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Kien','$2b$10$RhbS/.mlqXsXU6IvjQjpGuEIha6QcZPUmCdqtcykSZaELOsSBSQxy','kienvanvo7777@gmail.com','https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',0,'male',NULL,NULL,'2024-09-24 15:11:44','2024-09-24 15:34:48','kien'),(2,'Thai','$2b$10$BMMw.uvVpvxEKxjpLflIpugRDdxMTaio3zphXJq32pcasoqcs1.Va','doanhthai604204@gmail.com','https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',0,'male',NULL,NULL,'2024-09-24 15:41:46','2024-09-24 15:45:58','thai');
+
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 

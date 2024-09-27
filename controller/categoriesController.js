@@ -49,7 +49,7 @@ class CategoriesController {
                 user_id: null
             });
 
-            return res.status(201).json({
+            return res.status(200).json({
                 message: "Danh mục toàn cầu đã được tạo thành công",
                 newCat
             });
@@ -100,7 +100,7 @@ class CategoriesController {
                 user_id: userId
             });
 
-            return res.status(201).json({
+            return res.status(200).json({
                 message: "Tạo mới danh mục chi tiêu thành công",
                 newCat
             });

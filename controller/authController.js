@@ -60,7 +60,7 @@ class AuthController {
                 slug_user: userSlug
             });
     
-            return res.status(201).json({
+            return res.status(200).json({
                 message: 'Tạo người dùng thành công',
                 userId: newUser.id
             });

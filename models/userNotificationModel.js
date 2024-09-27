@@ -7,7 +7,7 @@ const UserNotification = db.define('UserNotification', {
     type: DataTypes.INTEGER,
     references: {
       model: 'users', 
-      key: 'id',      
+      key: 'user_id',      
     },
     allowNull: false
   },
@@ -15,7 +15,7 @@ const UserNotification = db.define('UserNotification', {
     type: DataTypes.INTEGER,
     references: {
       model: 'notifications', 
-      key: 'id',              
+      key: 'notification_id',              
     },
     allowNull: false
   },

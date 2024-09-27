@@ -2,6 +2,11 @@ const  DataTypes  = require('sequelize');
 const db = require('../config/database');
 
 const Transaction = db.define('Transaction', {
+  transaction_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   transaction_name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -36,7 +41,7 @@ const Transaction = db.define('Transaction', {
     allowNull: false,
     references: {
       model: 'users', 
-      key: 'id',
+      key: 'user_id',
     },
   },
   account_id: {
@@ -44,7 +49,7 @@ const Transaction = db.define('Transaction', {
     allowNull: false,
     references: {
       model: 'accounts', 
-      key: 'id',
+      key: 'account_id',
     },
   },
   category_id: {
@@ -52,7 +57,7 @@ const Transaction = db.define('Transaction', {
     allowNull: true, 
     references: {
       model: 'categories', 
-      key: 'id',
+      key: 'category_id',
     },
   },
   income_type_id: {
@@ -60,7 +65,7 @@ const Transaction = db.define('Transaction', {
     allowNull: true, 
     references: {
       model: 'incomeTypes', 
-      key: 'id',
+      key: 'income_type_id',
     },
   },
 }, {

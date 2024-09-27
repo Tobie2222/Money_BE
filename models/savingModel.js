@@ -3,6 +3,11 @@ const db = require('../config/database');
 
 
 const Saving = db.define('Saving', {
+  saving_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   saving_name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -38,7 +43,7 @@ const Saving = db.define('Saving', {
     allowNull: false,
     references: {
       model: 'users', 
-      key: 'id',
+      key: 'user_id',
     },
   },
 }, {

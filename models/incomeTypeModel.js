@@ -1,6 +1,11 @@
 const  DataTypes  = require('sequelize');
 const db = require('../config/database');
 const IncomeType = db.define('IncomeType', {
+  income_type_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   income_type_name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -19,7 +24,7 @@ const IncomeType = db.define('IncomeType', {
     allowNull: true, 
     references: {
       model: 'users', 
-      key: 'id',
+      key: 'user_id',
     },
   },
 }, {

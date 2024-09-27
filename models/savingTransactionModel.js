@@ -3,6 +3,11 @@ const db = require('../config/database');
 
 
 const SavingsTransaction = db.define('SavingsTransaction', {
+  transaction_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   transaction_name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -37,7 +42,7 @@ const SavingsTransaction = db.define('SavingsTransaction', {
     allowNull: false,
     references: {
       model: 'users', 
-      key: 'id',
+      key: 'user_id',
     },
   },
   account_id: {
@@ -45,7 +50,7 @@ const SavingsTransaction = db.define('SavingsTransaction', {
     allowNull: false,
     references: {
       model: 'accounts', 
-      key: 'id',
+      key: 'account_id',
     },
   },
   saving_id: {
@@ -53,7 +58,7 @@ const SavingsTransaction = db.define('SavingsTransaction', {
     allowNull: false,
     references: {
       model: 'savings', 
-      key: 'id',
+      key: 'saving_id',
     },
   },
 }, {

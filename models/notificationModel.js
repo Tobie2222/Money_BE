@@ -2,6 +2,11 @@ const  DataTypes  = require('sequelize');
 const db = require('../config/database');
 
 const Notification = db.define('Notification', {
+  notification_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   notification_name: {
     type: DataTypes.STRING,
     allowNull: false,

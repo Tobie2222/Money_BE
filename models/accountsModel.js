@@ -1,6 +1,11 @@
 const  DataTypes  = require('sequelize');
 const db = require('../config/database');
 const Account = db.define('Account', {
+  accout_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   account_name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -18,7 +23,7 @@ const Account = db.define('Account', {
     allowNull: false,
     references: {
       model: 'users', 
-      key: 'id',
+      key: 'user_id',
     },
   },
   account_types_id: {
@@ -26,7 +31,7 @@ const Account = db.define('Account', {
     allowNull: false,
     references: {
       model: 'account_types', 
-      key: 'id',
+      key: 'account_type_id',
     },
   },
 }, {

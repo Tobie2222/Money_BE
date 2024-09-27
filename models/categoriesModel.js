@@ -3,6 +3,11 @@ const db = require('../config/database');
 
 
 const Category = db.define('Category', {
+  category_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   category_name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -23,7 +28,7 @@ const Category = db.define('Category', {
     allowNull: true, 
     references: {
       model: 'users', 
-      key: 'id',
+      key: 'user_id',
     },
   },
 }, {
