@@ -55,13 +55,13 @@ class IncomeTypeController {
             if (find) {
                 return res.status(403).json({ message: "Income type already exists for this user" });
             }
-            if (!req.file) {
-                return res.status(400).json({ message: 'No image provided' });
-            }
+            // if (!req.file) {
+            //     return res.status(400).json({ message: 'No image provided' });
+            // }
 
             await IncomeType.create({
                 income_type_name,
-                income_type_image: req.file.path,
+                income_type_image:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROTIBidJi6AHVXFvTK09bFYYCel7jq1NNQkA&s",
                 is_global: false,
                 user_id: userId,
             });

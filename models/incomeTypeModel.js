@@ -28,7 +28,7 @@ const IncomeType = db.define('IncomeType', {
     },
   },
 }, {
-  timestamps: true, 
-  tableName: 'income_types', 
+  timestamps: false, 
+  tableName: 'income_type', 
 });
 module.exports = IncomeType;

@@ -9,6 +9,7 @@ class TransactionsController {
     //[create tran expense]
     async createExpenseTransactions(req, res) {
         try {
+            console.log(req.body);
             const { accountId, userId, categoryId } = req.params;
             const { transaction_name, desc_transaction, amount, transaction_date } = req.body;
 
@@ -31,10 +32,10 @@ class TransactionsController {
                 desc_transaction,
                 is_fixed: false,
                 amount,
-                type: "expense",
+                transactions_type: "expense",
                 transaction_date: new Date(transaction_date),
-                userId: userId,
-                accountId: accountId,
+                user_id: userId,
+                account_id: accountId,
                 categoryId: categoryId,
                 incomeTypeId: null,
                 slug_user: findUser.slug_user

@@ -4,7 +4,6 @@ dotenv.config();
 
   const verifyToken = (req,res,next) => {
     const tokenHeader = req.headers.token;
-    console.log(tokenHeader);
     
     if(!tokenHeader){
         return res.status(401).json({
@@ -23,7 +22,6 @@ dotenv.config();
 
  const verifyUser = (req,res,next) => {
     verifyToken(req,res,() => {
-        console.log(req.user);
         if (req.user && req.user.userId === parseInt(req.params.userId)) {
             next();
         } else {

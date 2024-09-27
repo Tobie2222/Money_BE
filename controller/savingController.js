@@ -8,7 +8,6 @@ class SavingController {
     // Create saving
     async createSaving(req, res) {
         try {
-            console.log(req.body)
             const { userId } = req.params;
             const { saving_name, desc_saving, goal_amount, deadline, saving_date } = req.body;
             const today = new Date();

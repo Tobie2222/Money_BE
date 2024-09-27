@@ -1,5 +1,6 @@
-const  DataTypes  = require('sequelize');
+const { DataTypes } = require('sequelize');
 const db = require('../config/database');
+
 const Account = db.define('Account', {
   account_id: {
     type: DataTypes.INTEGER,
@@ -38,5 +39,10 @@ const Account = db.define('Account', {
   timestamps: false, 
   tableName: 'accounts', 
 });
-Account.sync();
+
+// Phương thức để thiết lập quan hệ
+Account.associate = (models) => {
+  Account.belongsTo(models.AccountType, { foreignKey: 'account_types_id', as: 'accountType' });
+};
+
 module.exports = Account;

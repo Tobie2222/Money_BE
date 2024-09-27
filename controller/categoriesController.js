@@ -78,24 +78,23 @@ class CategoriesController {
                 });
             }
 
-            if (!req.file) {
-                return res.status(400).json({
-                    message: "Image is required"
-                });
-            }
+            // if (!req.file) {
+            //     return res.status(400).json({
+            //         message: "Image is required"
+            //     });
+            // }
 
-            const allowedTypes = ['image/jpeg', 'image/png'];
-            if (!allowedTypes.includes(req.file.mimetype)) {
-                return res.status(400).json({
-                    message: "Invalid image format. Only JPEG and PNG are allowed."
-                });
-            }
+            // const allowedTypes = ['image/jpeg', 'image/png'];
+            // if (!allowedTypes.includes(req.file.mimetype)) {
+            //     return res.status(400).json({
+            //         message: "Invalid image format. Only JPEG and PNG are allowed."
+            //     });
+            // }
 
-            const imagePath = req.file.path;
-
+            const imagePath = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROTIBidJi6AHVXFvTK09bFYYCel7jq1NNQkA&s";
             const newCat = await Category.create({
                 category_name: categories_name,
-                category_image: imagePath,
+                image: imagePath,
                 is_global: false,
                 user_id: userId
             });
@@ -117,13 +116,10 @@ class CategoriesController {
             const { userId } = req.params;
             const allCategories = await Category.findAll({
                 where: {
-                    [Op.or]: [
-                        { user_id: userId },
-                        { is_global: true }
-                    ]
+                    user_id: userId,
+                    is_global: false
                 }
-            });
-
+            });    
             return res.status(200).json({
                 message: "Danh mục đã được lấy thành công",
                 categories: allCategories

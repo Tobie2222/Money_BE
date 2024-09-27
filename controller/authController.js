@@ -89,7 +89,7 @@ class AuthController {
             // Find user in database
             const user = await User.findOne({
                 where: { email },
-                attributes: ['user_id', 'name', 'avatar', 'email', 'slug_user', 'password'] // Chỉ lấy password để so sánh
+                attributes: ['user_id', 'name', 'avatar', 'email', 'slug_user', 'password','isAdmin'] // Chỉ lấy password để so sánh
             });
             if (!user) {
                 return res.status(400).json({ message: 'Email hoặc mật khẩu không đúng' });
@@ -100,7 +100,6 @@ class AuthController {
             if (!validPassword) {
                 return res.status(400).json({ message: 'Email hoặc mật khẩu không đúng' });
             }
-    
             // Create JWT token
             const token = jwt.sign({
                 userId: user.user_id,

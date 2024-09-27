@@ -55,7 +55,7 @@ class AccountController {
 
             const { rows: allAccountByUser, count } = await Account.findAndCountAll({
                 where: { user_id: userId },
-                include: [{ model: AccountType, as: 'accountType' }],
+                //include: [{ model: AccountType, as: 'accountType' }],
                 limit: parseInt(limit),
                 offset: parseInt(offset)
             });

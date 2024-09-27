@@ -1,7 +1,8 @@
-const  DataTypes  = require('sequelize');
+const { DataTypes } = require('sequelize');
 const db = require('../config/database');
+
 const AccountType = db.define('AccountType', {
-  account_types_id: {
+  account_type_id: {  // Sửa tên trường để khớp với khóa ngoại trong Account
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -15,8 +16,13 @@ const AccountType = db.define('AccountType', {
     allowNull: false,
   },
 }, {
-  timestamps: true, 
+  timestamps: false, 
   tableName: 'account_types', 
 });
+
+// Phương thức để thiết lập quan hệ
+AccountType.associate = (models) => {
+  AccountType.hasMany(models.Account, { foreignKey: 'account_types_id', as: 'accounts' });
+};
 
 module.exports = AccountType;
