@@ -1,7 +1,5 @@
-const { DataTypes } = require('sequelize');
+const  DataTypes  = require('sequelize');
 const db = require('../config/database');
-
-
 const IncomeType = db.define('IncomeType', {
   income_type_name: {
     type: DataTypes.STRING,
@@ -16,7 +14,6 @@ const IncomeType = db.define('IncomeType', {
     allowNull: false,
     defaultValue: false, 
   },
-
   user_id: {
     type: DataTypes.INTEGER,
     allowNull: true, 
@@ -29,5 +26,4 @@ const IncomeType = db.define('IncomeType', {
   timestamps: true, 
   tableName: 'income_types', 
 });
-
 module.exports = IncomeType;

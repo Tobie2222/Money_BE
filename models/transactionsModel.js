@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const  DataTypes  = require('sequelize');
 const db = require('../config/database');
 
 const Transaction = db.define('Transaction', {
@@ -64,8 +64,8 @@ const Transaction = db.define('Transaction', {
     },
   },
 }, {
-  timestamps: true, 
+  timestamps: false, 
   tableName: 'transactions', 
 });
-
+Transaction.sync();
 module.exports = Transaction;

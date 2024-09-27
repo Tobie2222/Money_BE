@@ -1,6 +1,5 @@
-const { DataTypes } = require('sequelize');
+const  DataTypes  = require('sequelize');
 const db = require('../config/database');
-
 
 const Notification = db.define('Notification', {
   notification_name: {
@@ -22,8 +21,8 @@ const Notification = db.define('Notification', {
     defaultValue: 'admin', 
   },
 }, {
-  timestamps: true, 
+  timestamps: false, 
   tableName: 'notifications', 
 });
-
+Notification.sync();
 module.exports = Notification;

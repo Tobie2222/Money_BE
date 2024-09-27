@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const  DataTypes  = require('sequelize');
 const db = require('../config/database');
 
 
@@ -42,8 +42,8 @@ const Saving = db.define('Saving', {
     },
   },
 }, {
-  timestamps: true, 
+  timestamps: false, 
   tableName: 'savings',
 });
-
+Saving.sync();
 module.exports = Saving;

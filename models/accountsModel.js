@@ -1,7 +1,5 @@
-const { DataTypes } = require('sequelize');
+const  DataTypes  = require('sequelize');
 const db = require('../config/database');
-
-
 const Account = db.define('Account', {
   account_name: {
     type: DataTypes.STRING,
@@ -15,7 +13,6 @@ const Account = db.define('Account', {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-
   user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -33,9 +30,8 @@ const Account = db.define('Account', {
     },
   },
 }, {
-  timestamps: true, 
+  timestamps: false, 
   tableName: 'accounts', 
 });
-
-
+Account.sync();
 module.exports = Account;

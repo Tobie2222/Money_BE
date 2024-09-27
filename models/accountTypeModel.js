@@ -1,7 +1,5 @@
-const { DataTypes } = require('sequelize');
+const  DataTypes  = require('sequelize');
 const db = require('../config/database');
-
-
 const AccountType = db.define('AccountType', {
   account_type_name: {
     type: DataTypes.STRING,
