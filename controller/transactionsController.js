@@ -101,7 +101,7 @@ class TransactionsController {
                 where: {
                     user_id: userId,
                     transactions_type: "income",
-                    transaction_date: { [Op.gte]: twoDaysAgo }
+                    //transaction_date: { [Sequelize.gte]: twoDaysAgo }
                 },
                 order: [["transaction_date", "DESC"]],
                 limit: 5
@@ -111,7 +111,7 @@ class TransactionsController {
                 where: {
                     user_id: userId,
                     transactions_type: "expense",
-                    transaction_date: { [Op.gte]: twoDaysAgo }
+                    //transaction_date: { [Sequelize.gte]: twoDaysAgo }
                 },
                 order: [["transaction_date", "DESC"]],
                 limit: 5
