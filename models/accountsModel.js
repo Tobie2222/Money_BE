@@ -43,6 +43,8 @@ const Account = db.define('Account', {
 // Phương thức để thiết lập quan hệ
 Account.associate = (models) => {
   Account.belongsTo(models.AccountType, { foreignKey: 'account_types_id', as: 'accountType' });
+  Account.hasMany(models.Transaction, { foreignKey: 'account_id', as: 'transactions' });
+  Account.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
 };
 
 module.exports = Account;

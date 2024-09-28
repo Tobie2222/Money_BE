@@ -4,7 +4,7 @@ const {verifyUser}   = require("../middleware/verifyToken");
 const accountController = require("../controller/accountController");
 
 // [Create Account] - Requires account type and userId
-Router.post('/creatAccounts/:id_accountType/:userId', verifyUser, accountController.createAccount);
+Router.post('/createAccounts/:id_accountType/:userId', verifyUser, accountController.createAccount);
 //[Update Account] - Requires accountId and userId
 Router.put('/updateAccounts/:accountId/:userId', verifyUser, accountController.updateAccount);
 // [Get Account Details] - Requires accountId and userId

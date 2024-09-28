@@ -156,6 +156,32 @@ LOCK TABLES `notification` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `notification_id` int NOT NULL AUTO_INCREMENT,
+  `notification_name` varchar(255) NOT NULL,
+  `desc_notification` varchar(255) NOT NULL,
+  `priority` varchar(255) NOT NULL DEFAULT 'low',
+  `type` varchar(255) NOT NULL DEFAULT 'admin',
+  PRIMARY KEY (`notification_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `savings`
 --
 
@@ -260,13 +286,13 @@ LOCK TABLES `transactions` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `usernotificationschema`
+-- Table structure for table `usernotifications`
 --
 
-DROP TABLE IF EXISTS `usernotificationschema`;
+DROP TABLE IF EXISTS `usernotifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `usernotificationschema` (
+CREATE TABLE `usernotifications` (
   `user_id` int NOT NULL,
   `notification_id` int NOT NULL,
   `status` varchar(50) DEFAULT 'low',
@@ -276,12 +302,12 @@ CREATE TABLE `usernotificationschema` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `usernotificationschema`
+-- Dumping data for table `usernotifications`
 --
 
-LOCK TABLES `usernotificationschema` WRITE;
-/*!40000 ALTER TABLE `usernotificationschema` DISABLE KEYS */;
-/*!40000 ALTER TABLE `usernotificationschema` ENABLE KEYS */;
+LOCK TABLES `usernotifications` WRITE;
+/*!40000 ALTER TABLE `usernotifications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `usernotifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -306,7 +332,7 @@ CREATE TABLE `users` (
   `slug_user` varchar(191) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `slug_user` (`slug_user`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -315,7 +341,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-
+INSERT INTO `users` VALUES (1,'Kien','$2b$10$RhbS/.mlqXsXU6IvjQjpGuEIha6QcZPUmCdqtcykSZaELOsSBSQxy','kienvanvo7777@gmail.com','https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',1,'male',NULL,NULL,'2024-09-24 15:11:44','2024-09-25 23:56:05','kien'),(2,'Thai','$2b$10$BMMw.uvVpvxEKxjpLflIpugRDdxMTaio3zphXJq32pcasoqcs1.Va','doanhthai604204@gmail.com','https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',0,'male',NULL,NULL,'2024-09-24 15:41:46','2024-09-24 15:45:58','thai'),(3,'khanh','$2b$10$MkCc1kYNDnelMhr3l2miJOfqJFNs8WBaWLARprdZEDWyed/IqVyNi','khanh9102004@gmail.com','https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',1,'male',NULL,NULL,'2024-09-25 16:55:44','2024-09-26 00:04:16','khanh');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -332,4 +358,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-09-25 21:13:12
+-- Dump completed on 2024-09-28  7:15:35

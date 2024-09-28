@@ -4,6 +4,7 @@ const Transaction = require('../models/transactionsModel');
 const IncomeType = require('../models/incomeTypeModel');
 const Category = require('../models/categoriesModel');
 const Joi = require('joi');
+const db = require('../config/database')
 
 class AccountController {
     // Create a new account
@@ -77,20 +78,35 @@ class AccountController {
     async getAccountDetail(req, res) {
         try {
             const { accountId } = req.params;
-
-            const account = await Account.findByPk(accountId, {
-                include: [
-                    { model: Transaction, as: 'transactions', include: [{ model: IncomeType }, { model: Category }] }
-                ]
-            });
-
+        
+            // Tìm tài khoản bằng ID
+            const account = await Account.findByPk(accountId);
+            
             if (!account) {
                 return res.status(404).json({ message: "Tài khoản không tồn tại!" });
             }
-
-            const incomeTransactions = account.transactions.filter(transaction => transaction.type === 'income');
-            const expenseTransactions = account.transactions.filter(transaction => transaction.type === 'expense');
-
+    
+            // Lấy các giao dịch của tài khoản
+            const transactions = await Transaction.findAll({
+                where: { account_id: accountId }
+            });
+    
+            // Lấy thêm thông tin từ bảng IncomeType và Category dựa trên transaction
+            const incomeTransactions = [];
+            const expenseTransactions = [];
+    
+            for (const transaction of transactions) {
+                if (transaction.transaction_type === 'income') {
+                    const incomeType = await IncomeType.findByPk(transaction.income_type_id);
+                    const category = await Category.findByPk(transaction.category_id);
+                    incomeTransactions.push({ ...transaction.dataValues, incomeType, category });
+                } else if (transaction.transactions_type === 'expense') {
+                    const category = await Category.findByPk(transaction.category_id);
+                    expenseTransactions.push({ ...transaction.dataValues, category });
+                }
+            }
+    
+            // Trả về kết quả
             return res.status(200).json({
                 message: "Success",
                 accountDetail: {
@@ -101,11 +117,12 @@ class AccountController {
                     expenseTransactions
                 }
             });
-
+    
         } catch (err) {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
+    
 
     // Update account
     async updateAccount(req, res) {
@@ -157,9 +174,9 @@ class AccountController {
         try {
             const { accountId } = req.params;
 
-            await Account.destroy({ where: { id: accountId }, transaction });
-            await Transaction.update({ account_id: null }, { where: { account_id: accountId }, transaction });
-            await SavingTransaction.update({ account_id: null }, { where: { account_id: accountId }, transaction });
+            await Account.destroy({ where: { account_id: accountId }, transaction });
+            // await Transaction.update({ account_id: null }, { where: { account_id: accountId }, transaction });
+            // await SavingTransaction.update({ account_id: null }, { where: { account_id: accountId }, transaction });
 
             await transaction.commit();
             return res.status(200).json({ message: "Xóa tài khoản thành công" });
@@ -169,7 +186,7 @@ class AccountController {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
 
         } finally {
-            await transaction.release();
+            // await transaction.release();
         }
     }
 }

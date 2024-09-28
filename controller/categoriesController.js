@@ -2,11 +2,13 @@ const Category = require('../models/categoriesModel');
 const Transaction = require("../models/transactionsModel")
 const path = require('path');
 const Joi = require('joi');
+const { log } = require('console');
+const db = require('../config/database')
 
 // Định nghĩa schema cho validation
 const schema = Joi.object({
     categories_name: Joi.string().min(3).required(),
-    categories_image: Joi.string().optional()
+    // categories_image: Joi.string().optional()
 });
 
 class CategoriesController {
@@ -19,7 +21,7 @@ class CategoriesController {
             });
         }
         try {
-            const { categories_name } = req.body;
+            const { categories_name} = req.body;
             const existingCategory = await Category.findOne({ where: { category_name: categories_name, is_global: true } });
             if (existingCategory) {
                 return res.status(403).json({
@@ -27,24 +29,24 @@ class CategoriesController {
                 });
             }
 
-            if (!req.file) {
-                return res.status(400).json({
-                    message: "Image is required"
-                });
-            }
+            // if (!req.file) {
+            //     return res.status(400).json({
+            //         message: "Image is required"
+            //     });
+            // }
 
-            const allowedTypes = ['image/jpeg', 'image/png'];
-            if (!allowedTypes.includes(req.file.mimetype)) {
-                return res.status(400).json({
-                    message: "Invalid image format. Only JPEG and PNG are allowed."
-                });
-            }
+            // const allowedTypes = ['image/jpeg', 'image/png'];
+            // if (!allowedTypes.includes(req.file.mimetype)) {
+            //     return res.status(400).json({
+            //         message: "Invalid image format. Only JPEG and PNG are allowed."
+            //     });
+            // }
 
-            const imagePath = req.file.path;
+            const imagePath = 'https://example.com/test.png';
 
             const newCat = await Category.create({
                 category_name: categories_name,
-                category_image: imagePath,
+                image: imagePath,
                 is_global: true,
                 user_id: null
             });
@@ -133,30 +135,39 @@ class CategoriesController {
 
     // Cập nhật danh mục
     async updateCategories(req, res) {
-        const { catId } = req.params;
+        const { catId, userId } = req.params;       
         const { error } = schema.validate(req.body);
         if (error) {
             return res.status(400).json({
                 message: 'Validation Error: ' + error.details[0].message,
             });
         }
+    
         try {
-            const category = await Category.findByPk(catId);
-            if (!category) {
+            // Check if the categories exist
+            const categories = await Category.findAll({
+                where: {
+                    category_id: catId,
+                    user_id: userId
+                }
+            });
+            if (categories.length === 0) {
                 return res.status(404).json({
-                    message: "Danh mục không tồn tại"
+                    message: "Không có danh mục nào được tìm thấy"
                 });
             }
-            if (category.is_global) {
-                return res.status(403).json({
-                    message: "Không thể cập nhật danh mục toàn cầu"
-                });
-            }
-
-            await Category.update(req.body, { where: { id: catId } });
-
+    
+            // Update the categories
+            const updatedCount = await Category.update(req.body, {
+                where: {
+                    category_id: catId,
+                    user_id: userId
+                }
+            });
+    
             return res.status(200).json({
-                message: "Danh mục đã được cập nhật thành công"
+                message: "Danh mục đã được cập nhật thành công",
+                updatedCount
             });
         } catch (err) {
             return res.status(500).json({
@@ -184,7 +195,7 @@ class CategoriesController {
                 });
             }
 
-            await Category.destroy({ where: { id: catId }, transaction });
+            await Category.destroy({ where: { category_id: catId }, transaction });
             await Transaction.update({ category_id: null }, { where: { category_id: catId }, transaction });
 
             await transaction.commit();

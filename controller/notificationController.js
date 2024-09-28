@@ -8,48 +8,57 @@ class NotificationController {
         try {
             const { userId } = req.params;
             const { notification_name, desc_notification, priority } = req.body;
-
+    
+            // Log input data for debugging
+            console.log({ userId, notification_name, desc_notification, priority });
+    
             // Check if the user is an admin
             const admin = await User.findOne({
                 where: {
-                    id: userId,
+                    user_id: userId,
                     isAdmin: true
                 }
             });
-
+    
             if (!admin) {
                 return res.status(403).json({
                     message: 'Bạn không có quyền thực hiện hành động này'
                 });
             }
-
+    
             // Create new notification
             const notification = await Notification.create({
                 notification_name,
                 desc_notification,
                 priority,
-                type: 'admin'
             });
-
+    
             // Get all users
-            const users = await User.findAll({ attributes: ['id'] });
+            const users = await User.findAll({ attributes: ['user_id'] });
             const userNotifications = users.map(user => ({
-                user_id: user.id,
-                notification_id: notification.id,
+                user_id: user.user_id,
+                notification_id: notification.notification_id,
                 status: 'unread'
             }));
-
+    
             // Insert user notifications in batch
-            await UserNotification.bulkCreate(userNotifications);
-
+            await UserNotification.bulkCreate(userNotifications)
+                .catch(err => {
+                    return res.status(500).json({
+                        message: `Error creating user notifications: ${err.message}`
+                    });
+                });
+    
             return res.status(200).json({
                 message: 'Tạo thông báo thành công',
-                notificationId: notification.id
+                notificationId: notification.notification_id
             });
         } catch (err) {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
+    
+    
 
     // Get notifications for a user
     async getNotification(req, res) {

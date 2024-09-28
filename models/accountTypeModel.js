@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const db = require('../config/database');
 
 const AccountType = db.define('AccountType', {
-  account_type_id: {  // Sửa tên trường để khớp với khóa ngoại trong Account
+  account_types_id: {  
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,

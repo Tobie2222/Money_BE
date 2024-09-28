@@ -68,5 +68,9 @@ const Transaction = db.define('Transaction', {
   timestamps: false, 
   tableName: 'transactions', 
 });
+
+Transaction.associate = (models) => {
+  Transaction.belongsTo(models.Account, { foreignKey: 'account_id', as: 'accounts' });
+};
 Transaction.sync();
 module.exports = Transaction;

@@ -1,6 +1,7 @@
 const Transaction = require('../models/transactionsModel');
 const IncomeType = require('../models/incomeTypeModel');
 const Joi = require('joi');
+const db = require("../config/database")
 
 const schema = Joi.object({
     income_type_name: Joi.string().min(3).required(),
@@ -21,13 +22,13 @@ class IncomeTypeController {
             if (find) {
                 return res.status(403).json({ message: "Income type already exists" });
             }
-            if (!req.file) {
-                return res.status(400).json({ message: "No image provided" });
-            }
+            // if (!req.file) {
+            //     return res.status(400).json({ message: "No image provided" });
+            // }
 
             await IncomeType.create({
                 income_type_name,
-                income_type_image: req.file.path,
+                income_type_image: 'https://example.com/test.png',
                 is_global: true,
                 user_id: null, // Global income type, no user ID
             });
@@ -113,8 +114,7 @@ class IncomeTypeController {
 
             const incomeTypes = await IncomeType.findAll({
                 where: {
-                    user_id: userId,
-                    is_global: true
+                    user_id: userId
                 },
                 limit,
                 offset

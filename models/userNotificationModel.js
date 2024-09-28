@@ -2,7 +2,7 @@ const db = require('../config/database');
 const  DataTypes  = require('sequelize');
 
 
-const UserNotification = db.define('UserNotification', {
+const UserNotification = db.define('usernotifications', {
   user_id: {
     type: DataTypes.INTEGER,
     references: {
@@ -23,13 +23,7 @@ const UserNotification = db.define('UserNotification', {
     type: DataTypes.ENUM('read', 'unread'),
     defaultValue: 'unread',
   },
-  read_at: {
-    type: DataTypes.DATE,
-    allowNull: true,  
-  }
 }, {
-  timestamps: true, 
-  tableName: 'user_notifications' 
+  tableName: 'usernotifications' 
 });
-
 module.exports = UserNotification;
