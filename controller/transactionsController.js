@@ -3,7 +3,8 @@ const Accounts = require("../models/accountsModel");
 const Users = require("../models/userModel"); 
 const Categories = require("../models/categoriesModel"); 
 const IncomeTypes = require("../models/incomeTypeModel"); 
-const { Op } = require("sequelize"); 
+const { Sequelize } = require('sequelize');
+
 
 class TransactionsController {
     //[create tran expense]
@@ -98,22 +99,20 @@ class TransactionsController {
 
             const recentIncomeTransactions = await Transactions.findAll({
                 where: {
-                    userId: userId,
-                    type: "income",
+                    user_id: userId,
+                    transactions_type: "income",
                     transaction_date: { [Op.gte]: twoDaysAgo }
                 },
-                include: [{ model: IncomeTypes, attributes: ["income_type_image"] }],
                 order: [["transaction_date", "DESC"]],
                 limit: 5
             });
 
             const recentExpenseTransactions = await Transactions.findAll({
                 where: {
-                    userId: userId,
-                    type: "expense",
+                    user_id: userId,
+                    transactions_type: "expense",
                     transaction_date: { [Op.gte]: twoDaysAgo }
                 },
-                include: [{ model: Categories, attributes: ["categories_image"] }],
                 order: [["transaction_date", "DESC"]],
                 limit: 5
             });
@@ -134,18 +133,44 @@ class TransactionsController {
     async getAllTranIncome(req, res) {
         try {
             const { userId } = req.params;
+    
+            // Fetch transactions based on userId and type "income"
             const findTran = await Transactions.findAll({
                 where: {
-                    userId: userId,
-                    type: "income"
-                },
-                include: [
-                    {
-                        model: IncomeTypes,
-                        attributes: ['income_type_image']
-                    }
-                ]
+                    user_id: userId,
+                    transactions_type: "income"
+                }
             });
+    
+            // Optionally, you can fetch income types separately if needed
+            // const incomeTypes = await IncomeTypes.findAll({
+            //     attributes: ['income_type_image']
+            // });
+    
+            return res.status(200).json({
+                message: "success",
+                findTran,
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: `Lỗi ${err.message}`
+            });
+        }
+    }
+    
+    //getAll TranExpense
+    async getAllTranExpense(req, res) {
+        try {
+            const { userId } = req.params;
+    
+            // Fetch transactions based on userId and type "expense"
+            const findTran = await Transactions.findAll({
+                where: {
+                    user_id: userId,
+                    transactions_type: "expense"
+                }
+            });
+    
             return res.status(200).json({
                 message: "success",
                 findTran
@@ -156,32 +181,7 @@ class TransactionsController {
             });
         }
     }
-    //getAll TranExpense
-async getAllTranExpense(req, res) {
-    try {
-        const { userId } = req.params;
-        const findTran = await Transactions.findAll({
-            where: {
-                userId: userId,
-                type: "expense"
-            },
-            include: [
-                {
-                    model: Categories,
-                    attributes: ['categories_image']
-                }
-            ]
-        });
-        return res.status(200).json({
-            message: "success",
-            findTran
-        });
-    } catch (err) {
-        return res.status(500).json({
-            message: `Lỗi ${err.message}`
-        });
-    }
-}
+    
 
     //[delete tran]
     async deleteTransaction(req, res) {
@@ -249,34 +249,34 @@ async getAllTranExpense(req, res) {
     // get Avg balance in month
     async getAvgTranInMonth(req, res) {
         try {
-            const { slug_user } = req.params;
+            const { userId } = req.params;  
             const { month, year } = req.query;
-
+    
             const startDate = new Date(year, month - 1, 1);
             const endDate = new Date(year, month, 0, 23, 59, 59, 999);
-
-            // Tính tổng thu nhập và chi tiêu cho tháng hiện tại
+    
+            // Calculate total income and expenses for the current month
             const totals = await Transactions.findAll({
                 where: {
-                    userId: slug_user,
+                    user_id: userId,  // Updated here
                     transaction_date: {
-                        [Op.between]: [startDate, endDate],
+                        $gte: startDate,  // Start date
+                        $lte: endDate      // End date
                     },
                 },
                 attributes: [
-                    'type',
+                    'transactions_type',
                     [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalAmount']
                 ],
-                group: ['type']
+                group: ['transactions_type'] // Ensure this matches your column name
             });
-
-            // Tính tổng số ngày trong tháng hiện tại
+    
             const daysInMonth = new Date(year, month, 0).getDate();
-            const totalExpenseThisMonth = totals.find(item => item.type === "expense")?.get('totalAmount') || 0;
-            const totalIncomeThisMonth = totals.find(item => item.type === "income")?.get('totalAmount') || 0;
+            const totalExpenseThisMonth = totals.find(item => item.transactions_type === "expense")?.get('totalAmount') || 0;
+            const totalIncomeThisMonth = totals.find(item => item.transactions_type === "income")?.get('totalAmount') || 0;
             const avgExpenseThisMonth = totalExpenseThisMonth / daysInMonth;
             const avgIncomeThisMonth = totalIncomeThisMonth / daysInMonth;
-
+    
             return res.status(200).json({
                 message: "success",
                 data: {
@@ -294,9 +294,10 @@ async getAllTranExpense(req, res) {
             });
         }
     }
+    
     // get Monthly Sum Transactions
     async getMonthlySumTran(req, res) {
-        const { slug_user } = req.params;
+        const { userId } = req.params;
         const { year } = req.query;
         if (!year || isNaN(year)) {
             return res.status(400).json({ message: "Năm không hợp lệ" });
@@ -304,17 +305,19 @@ async getAllTranExpense(req, res) {
         try {
             const transactions = await Transactions.findAll({
                 where: {
-                    userId: slug_user,
+                    user_id: userId,
                     transaction_date: {
-                        [Op.between]: [new Date(`${year}-01-01`), new Date(`${parseInt(year) + 1}-01-01`)],
+                        // Specify the date range without Op
+                        gte: new Date(`${year}-01-01`),
+                        lt: new Date(`${parseInt(year) + 1}-01-01`),
                     }
                 },
                 attributes: [
                     [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'month'],
-                    'type',
+                    'transactions_type',
                     [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalAmount']
                 ],
-                group: [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'type'],
+                group: [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'transactions_type'],
                 order: [Sequelize.fn('MONTH', Sequelize.col('transaction_date'))]
             });
 
@@ -327,7 +330,7 @@ async getAllTranExpense(req, res) {
 
             transactions.forEach(month => {
                 const monthIndex = month.get('month') - 1;
-                if (month.type === 'income') {
+                if (month.transactions_type === 'income') {
                     monthlyAverages[monthIndex].income = month.get('totalAmount');
                 } else {
                     monthlyAverages[monthIndex].expense = month.get('totalAmount');
@@ -345,57 +348,60 @@ async getAllTranExpense(req, res) {
             });
         }
     }
-    // get Average Income and Expense Per Month
+
     async getAverageIncomeAndExpensePerMonth(req, res) {
-        const { slug_user } = req.params;
-        const { year } = req.query;
-        if (!year || isNaN(year)) {
-            return res.status(400).json({ message: "Năm không hợp lệ" });
-        }
-        try {
-            const results = await Transactions.findAll({
-                where: {
-                    userId: slug_user,
-                    transaction_date: {
-                        [Op.between]: [new Date(`${year}-01-01`), new Date(`${parseInt(year) + 1}-01-01`)],
+            const { userId } = req.params;
+            const { year } = req.query;
+            if (!year || isNaN(year)) {
+                return res.status(400).json({ message: "Năm không hợp lệ" });
+            }
+            try {
+                const results = await Transactions.findAll({
+                    where: {
+                        user_id: userId,
+                        transaction_date: {
+                            // Specify the date range without Op
+                            gte: new Date(`${year}-01-01`),
+                            lt: new Date(`${parseInt(year) + 1}-01-01`),
+                        }
+                    },
+                    attributes: [
+                        [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'month'],
+                        'transactions_type',
+                        [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalAmount'],
+                        [Sequelize.fn('COUNT', Sequelize.col('transaction_id')), 'count']
+                    ],
+                    group: [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'transactions_type'],
+                    order: [Sequelize.fn('MONTH', Sequelize.col('transaction_date'))]
+                });
+
+                const monthlyAverages = Array.from({ length: 12 }, (_, i) => ({
+                    month: i + 1,
+                    averageIncome: 0,
+                    averageExpense: 0
+                }));
+
+                results.forEach(monthData => {
+                    const monthIndex = monthData.get('month') - 1;
+                    const count = monthData.get('count');
+                    if (monthData.transactions_type === 'income') {
+                        monthlyAverages[monthIndex].averageIncome = monthData.get('totalAmount') / count;
+                    } else {
+                        monthlyAverages[monthIndex].averageExpense = monthData.get('totalAmount') / count;
                     }
-                },
-                attributes: [
-                    [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'month'],
-                    'type',
-                    [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalAmount'],
-                    [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
-                ],
-                group: [Sequelize.fn('MONTH', Sequelize.col('transaction_date')), 'type'],
-                order: [Sequelize.fn('MONTH', Sequelize.col('transaction_date'))]
-            });
+                });
 
-            const monthlyAverages = Array.from({ length: 12 }, (_, i) => ({
-                month: i + 1,
-                averageIncome: 0,
-                averageExpense: 0
-            }));
-
-            results.forEach(monthData => {
-                const monthIndex = monthData.get('month') - 1;
-                const count = monthData.get('count');
-                if (monthData.type === 'income') {
-                    monthlyAverages[monthIndex].averageIncome = monthData.get('totalAmount') / count;
-                } else {
-                    monthlyAverages[monthIndex].averageExpense = monthData.get('totalAmount') / count;
-                }
-            });
-
-            return res.status(200).json({
-                message: "Success",
-                monthlyAverages
-            });
-        } catch (err) {
-            return res.status(500).json({
-                message: `Lỗi: ${err.message}`
-            });
-        }
+                return res.status(200).json({
+                    message: "Success",
+                    monthlyAverages
+                });
+            } catch (err) {
+                return res.status(500).json({
+                    message: `Lỗi: ${err.message}`
+                });
+            }
     }
+
     // Find Transactions by keyword
     async findTransactions(req, res) {
         try {

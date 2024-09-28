@@ -3,6 +3,7 @@ const Notification = require('../models/notificationModel');
 const UserNotification = require('../models/userNotificationModel');
 const Account = require('../models/accountsModel');
 const Saving = require("../models/savingModel")
+const db = require("../config/database")
 
 class SavingController {
     // Create saving
@@ -24,7 +25,7 @@ class SavingController {
                 goal_amount,
                 deadline,
                 saving_date,
-                saving_image: req.file ? req.file.path : null
+                saving_image: "https://example.com/test.png"  
             });
 
             return res.status(200).json({ message: "Tạo mới khoản tiết kiệm thành công", saving });
@@ -56,7 +57,7 @@ class SavingController {
         try {
             const { savingId, userId } = req.params;
 
-            const saving = await Saving.findOne({ where: { id: savingId, user_id: userId } });
+            const saving = await Saving.findOne({ where: { saving_id: savingId, user_id: userId } });
 
             if (!saving) {
                 return res.status(404).json({ message: "Khoản tiết kiệm không tồn tại" });
@@ -129,8 +130,8 @@ class SavingController {
             const { amount, name_tran, transaction_date } = req.body;
             const tranDate = new Date(transaction_date);
 
-            const saving = await Saving.findOne({ where: { id: savingId }, transaction });
-            const account = await Account.findOne({ where: { id: accountId }, transaction });
+            const saving = await Saving.findOne({ where: { saving_id: savingId }, transaction });
+            const account = await Account.findOne({ where: { account_id: accountId }, transaction });
 
             if (!saving || !account) {
                 await transaction.rollback();
@@ -169,11 +170,11 @@ class SavingController {
                     priority: 'low'
                 }, { transaction });
 
-                await UserNotification.create({
-                    user_id: userId,
-                    notification_id: notification.id,
-                    status: 'unread'
-                }, { transaction });
+                // await UserNotification.create({
+                //     user_id: userId,
+                //     notification_id: notification.id,
+                //     status: 'unread'
+                // }, { transaction });
             }
 
             await SavingsTransaction.create({

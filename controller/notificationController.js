@@ -9,9 +9,6 @@ class NotificationController {
             const { userId } = req.params;
             const { notification_name, desc_notification, priority } = req.body;
     
-            // Log input data for debugging
-            console.log({ userId, notification_name, desc_notification, priority });
-    
             // Check if the user is an admin
             const admin = await User.findOne({
                 where: {
@@ -57,9 +54,6 @@ class NotificationController {
             return res.status(500).json({ message: `Lỗi: ${err.message}` });
         }
     }
-    
-    
-
     // Get notifications for a user
     async getNotification(req, res) {
         try {

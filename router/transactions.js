@@ -28,13 +28,13 @@ Router.get('/getDetailTran/:tranId/:userId', verifyUser, transactionsController.
 Router.get('/getAllTranRecent/:userId', verifyUser, transactionsController.getRecentTranByUser);
 
 // [Get Average Transactions in Month] - User specific
-Router.get('/getAvgTranInMonth/:userId/:slug_user', verifyUser, transactionsController.getAvgTranInMonth);
+Router.get('/getAvgTranInMonth/:userId', verifyUser, transactionsController.getAvgTranInMonth);
 
 // [Get Monthly Sum of Transactions] - User specific
-Router.get('/getSumTranByMonth/:userId/:slug_user', verifyUser, transactionsController.getMonthlySumTran);
+Router.get('/getSumTranByMonth/:userId/', verifyUser, transactionsController.getMonthlySumTran);
 
 // [Get Average Income and Expense per Month] - User specific
- Router.get('/getAvgTranByMonth/:userId/:slug_user', verifyUser, transactionsController.getAverageIncomeAndExpensePerMonth);
+ Router.get('/getAvgTranByMonth/:userId/', verifyUser, transactionsController.getAverageIncomeAndExpensePerMonth);
 
 // [Find Transactions by Keyword] - User specific
 Router.get('/findTran/:userId', verifyUser, transactionsController.findTransactions);
