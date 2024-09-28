@@ -25,7 +25,7 @@ services:
       - 2004:3306
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./Money.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - ./money_final.sql:/docker-entrypoint-initdb.d/mysql-init.sql
  
 volumes:
   mysql-data:
