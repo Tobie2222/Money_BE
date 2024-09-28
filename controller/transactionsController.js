@@ -71,10 +71,10 @@ class TransactionsController {
                 desc_transaction,
                 is_fixed: false,
                 amount,
-                type: "income",
+                transactions_type: "income",
                 transaction_date: new Date(transaction_date),
-                userId: userId,
-                accountId: accountId,
+                user_id: userId,
+                account_id: accountId,
                 incomeTypeId: incomeTypeId,
                 categoryId: null,
                 slug_user: findUser.slug_user
