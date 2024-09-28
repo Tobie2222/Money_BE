@@ -408,7 +408,7 @@ class TransactionsController {
             const { keyword, type } = req.query;
             const findTran = await Transactions.findAll({
                 where: {
-                    type: type,
+                    transactions_type: type,
                     transaction_name: {
                         [Op.like]: `%${keyword}%`
                     }
