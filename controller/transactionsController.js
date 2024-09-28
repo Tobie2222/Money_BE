@@ -94,14 +94,13 @@ class TransactionsController {
     async getRecentTranByUser(req, res) {
         try {
             const { userId } = req.params;
-            const twoDaysAgo = new Date();
-            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-
+            // const twoDaysAgo = new Date();
+            // twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
             const recentIncomeTransactions = await Transactions.findAll({
                 where: {
                     user_id: userId,
                     transactions_type: "income",
-                    transaction_date: { [Op.gte]: twoDaysAgo }
+                    // transaction_date: { [Sequelize.gte]: twoDaysAgo }
                 },
                 order: [["transaction_date", "DESC"]],
                 limit: 5
@@ -111,7 +110,7 @@ class TransactionsController {
                 where: {
                     user_id: userId,
                     transactions_type: "expense",
-                    transaction_date: { [Op.gte]: twoDaysAgo }
+                    // transaction_date: { [Sequelize.gte]: twoDaysAgo }
                 },
                 order: [["transaction_date", "DESC"]],
                 limit: 5
